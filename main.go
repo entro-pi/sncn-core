@@ -170,14 +170,18 @@ func main() {
   }
   defer server.Close()
   if zmq.HasCurve() {
+
     zmq.AuthSetVerbose(true)
     zmq.AuthStart()
-    zmq.AuthAllow("snowcrash.network", "127.0.0.1/8")
-
     servekey, servesec, err := zmq.NewCurveKeypair()
     //have this run as it's own thread
     go givePubKey(servekey, in)
     clientkey := <-in
+
+    IPAddress := <-in
+
+    zmq.AuthAllow("snowcrash.network", IPAddress+"/8")
+
 //    go givePubKey(servekey)
     zmq.AuthCurveAdd("snowcrash.network", clientkey )
     err = server.ServerAuthCurve("snowcrash.network", servesec)
@@ -188,7 +192,6 @@ func main() {
     }
     fmt.Println("Connecting...")
     //channel in!
-    IPAddress := <-in
     client.Connect("tcp://"+IPAddress+":4000")
     time.Sleep(100*time.Millisecond)
     fmt.Println("Sending...")
