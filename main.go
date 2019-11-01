@@ -172,7 +172,7 @@ func main() {
   if zmq.HasCurve() {
     zmq.AuthSetVerbose(true)
     zmq.AuthStart()
-    zmq.AuthAllow("snowcrash.network", "*")
+    zmq.AuthAllow("snowcrash.network", "127.0.0.1/8")
 
     servekey, servesec, err := zmq.NewCurveKeypair()
     //have this run as it's own thread
