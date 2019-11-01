@@ -23,7 +23,7 @@ type Descriptions struct {
 	ROOMTITLE int
 }
 type Chat struct {
-	User Player
+	User string
 	Message string
 	Time time.Time
 }
@@ -201,6 +201,18 @@ func loopInput(servepubKey string, in chan string) {
         if err != nil {
           panic(err)
         }
+    }else if strings.Contains(request, "+=+") {
+      message := strings.Split(request, "+=+")[1]
+      playerName := strings.Split(request, "+=+")[0]
+      fmt.Println("Creating chat)")
+      createChat(message, playerName)
+      toSend := showChat()
+      fmt.Println("Sending chat")
+      _, err = response.Send(toSend, 0)
+      if err != nil {
+        panic(err)
+      }
+
     }else if strings.Contains(request, ":go to=") {
       if len(strings.Split(request, ":")) == 2 {
     //    playerHash := strings.Split(request, ":")[0]
@@ -208,7 +220,7 @@ func loopInput(servepubKey string, in chan string) {
   //      play = lookupPlayer(pass)
 //        goTo(dest int, play Player, populated []Space)
       }
-      }else {
+    }else {
 
   //    in <- request
       _, err := response.Send("INVALID REQUEST", 0)

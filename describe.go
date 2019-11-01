@@ -147,7 +147,7 @@ func showDesc(room Space) {
 	}
 }
 
-func showChat(play Player) {
+func showChat() string {
 	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
 	if err != nil {
 		panic(err)
@@ -162,7 +162,9 @@ func showChat(play Player) {
 
 	count := 0
 	var row int
-	for mess.Next(context.Background()) {
+  position := 0
+  message := ""
+  for mess.Next(context.Background()) {
 		var chatMess Chat
 		err := mess.Decode(&chatMess)
 		if err != nil {
@@ -174,15 +176,17 @@ func showChat(play Player) {
 		if row >= 51 {
 			row = 0
 		}
-		message, position := AssembleComposeCel(chatMess, row)
+		message, position = AssembleComposeCel(chatMess, row)
 		row = position
-		fmt.Printf(message)
+//		fmt.Printf(message)
 //		fmt.Printf(chatStart)
 //		fmt.Printf(chatMess.Message + " ")
 //		fmt.Printf(chatEnd)
 //  	fmt.Printf(end)
 
 	}
+  return message
+
 }
 func drawDig(digFrame [][]int, zonePos []int) {
 	for i := 0;i < len(digFrame);i++ {

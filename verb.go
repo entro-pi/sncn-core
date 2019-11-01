@@ -79,8 +79,8 @@ func AssembleComposeCel(chatMess Chat, row int) (string, int) {
 	row++
 	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";180H\033[48;2;10;255;20m \033[48;2;10;10;20m", words, "\033[48;2;10;255;20m \033[0m"+timeString[0])
 	row++
-	namePlate := "                            "[len(chatMess.User.Name):]
-	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";180H\033[48;2;10;255;20m\033[38:2:50:0:50m@"+chatMess.User.Name+namePlate+"\033[48;2;10;255;20m \033[0m")
+	namePlate := "                            "[len(chatMess.User):]
+	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";180H\033[48;2;10;255;20m\033[38:2:50:0:50m@"+chatMess.User+namePlate+"\033[48;2;10;255;20m \033[0m")
 
 	return cel, row
 	//	fmt.Println(cel)
@@ -290,35 +290,35 @@ func genCoreBoard(play Player, populated []Space) (string, Player) {
     play.PlainCoreBoard = newValue
     play.CoreBoard = newValue
     showCoreBoard(play)
-    showChat(play)
+    showChat()
     showDesc(play.CurrentRoom)
     time.Sleep(250*time.Millisecond)
     newValue = strings.ReplaceAll(newValue, "T", "\033[48;2;200;150;0mT\033[0m")
 
     play.CoreBoard = newValue
     showCoreBoard(play)
-    showChat(play)
+    showChat()
     showDesc(play.CurrentRoom)
     time.Sleep(250*time.Millisecond)
     newValue = strings.ReplaceAll(newValue, "M", "\033[48;2;200;50;50mM\033[0m")
 
     play.CoreBoard = newValue
     showCoreBoard(play)
-    showChat(play)
+    showChat()
     showDesc(play.CurrentRoom)
     time.Sleep(250*time.Millisecond)
 		newValue = strings.ReplaceAll(newValue, "%", "\033[38;2;0;150;150m%\033[0m")
 
     play.CoreBoard = newValue
     showCoreBoard(play)
-    showChat(play)
+    showChat()
     showDesc(play.CurrentRoom)
     time.Sleep(250*time.Millisecond)
 		newValue = strings.ReplaceAll(newValue, "D", "\033[48;2;200;150;150mD\033[0m")
 
     play.CoreBoard = newValue
     showCoreBoard(play)
-    showChat(play)
+    showChat()
     showDesc(play.CurrentRoom)
     time.Sleep(250*time.Millisecond)
 		newValue = strings.ReplaceAll(newValue, " ", "\033[48;2;0;200;150m \033[0m")
@@ -331,7 +331,7 @@ func genCoreBoard(play Player, populated []Space) (string, Player) {
 
 
 //TODO make this modular
-func createChat(message string, play Player) {
+func createChat(message string, player string) {
 	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
 	if err != nil {
 		panic(err)
@@ -347,8 +347,8 @@ func createChat(message string, play Player) {
 	}
 
 	collection := client.Database("chat").Collection("log")
-	_, err = collection.InsertOne(context.Background(), bson.M{"name":play.Name,
-						"message":message, "time":time.Now(), "user":play })
+	_, err = collection.InsertOne(context.Background(), bson.M{"name":"@"+player,
+						"message":message, "time":time.Now(), "user":player })
 	if err != nil {
 		panic(err)
 	}
