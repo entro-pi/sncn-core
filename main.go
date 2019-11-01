@@ -78,7 +78,7 @@ func main() {
   }
   defer server.Close()
   for {
-    servekey, _, err := zmq.NewCurveKeypair()
+    _, _, err := zmq.NewCurveKeypair()
     if err != nil {
       panic(err)
     }
