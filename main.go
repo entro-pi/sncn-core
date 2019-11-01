@@ -176,9 +176,10 @@ func main() {
     servekey, servesec, err := zmq.NewCurveKeypair()
     //have this run as it's own thread
     go givePubKey(servekey, in)
-    clientkey := <-in
+    clientDat := <-in
+    clientString := strings.Split(clientDat, ":")
+    clientkey, IPAddress := clientString[0], clientString[1]
 
-    IPAddress := <-in
 
     zmq.AuthAllow("snowcrash.network", IPAddress+"/8")
 
