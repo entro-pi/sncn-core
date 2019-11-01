@@ -5,7 +5,92 @@ import (
   "strconv"
   "strings"
   "fmt"
+  "github.com/SolarLune/dngn"
   zmq "github.com/pebbe/zmq4"
+
+)
+
+
+type Descriptions struct {
+	BATTLESPAM int
+	ROOMDESC int
+	PLAYERDESC int
+	ROOMTITLE int
+}
+type Chat struct {
+	User Player
+	Message string
+	Time time.Time
+}
+type Space struct{
+	Room dngn.Room
+	Vnums string
+	Zone string
+	ZonePos []int
+	ZoneMap [][]int
+	Vnum int
+	Desc string
+	Mobiles []int
+	Items []int
+	CoreBoard string
+	Exits Exit
+	Altered bool
+}
+type Exit struct {
+	North int
+	South int
+	East int
+	West int
+	NorthWest int
+	NorthEast int
+	SouthWest int
+	SouthEast int
+	Up int
+	Down int
+}
+
+type Player struct {
+	Name string
+	Title string
+	Inventory []int
+	Equipment []int
+	CoreBoard string
+	PlainCoreBoard string
+	CurrentRoom Space
+
+	MaxRezz int
+	Rezz int
+	Tech int
+
+	Str int
+	Int int
+	Dex int
+	Wis int
+	Con int
+	Cha int
+}
+
+type Mobile struct {
+	Name string
+	LongName string
+	ItemSpawn []int
+	Rep string
+	MaxRezz int
+	Rezz int
+	Tech int
+	Aggro int
+	Align int
+}
+
+
+
+const (
+	cmdPos = "\033[51;0H"
+	mapPos = "\033[1;51H"
+	descPos = "\033[0;50H"
+	chatStart = "\033[38:2:200:50:50m{{=\033[38:2:150:50:150m"
+	chatEnd = "\033[38:2:200:50:50m=}}"
+	end = "\033[0m"
 
 )
 
@@ -87,9 +172,7 @@ func main() {
     clientkey, clientseckey, err := zmq.NewCurveKeypair()
     servekey, servesec, err := zmq.NewCurveKeypair()
     //have this run as it's own thread
-    for {
-        givePubKey(servekey)
-    }
+    go givePubKey(servekey)
 //    go givePubKey(servekey)
 
     zmq.AuthCurveAdd("snowcrash.network", clientkey )
@@ -117,9 +200,19 @@ func main() {
   if err != nil {
     panic(err)
   }
-
+  INPUT:
+  for {
+    command, err := client.Recv(0)
+    if err != nil {
+      panic(err)
+    }
+      if command == "shutdown" {
+          break INPUT
+      }
+  }
   fmt.Println(reply)
   zmq.AuthStop()
+
 
   fmt.Println("Let's fill this space with the core functionality")
 }
