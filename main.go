@@ -196,10 +196,6 @@ func main() {
     time.Sleep(100*time.Millisecond)
     server.Send("Curve security status: False", 0)
   }
-  reply, err := client.Recv(0)
-  if err != nil {
-    panic(err)
-  }
   INPUT:
   for {
     command, err := client.Recv(0)
