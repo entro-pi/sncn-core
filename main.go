@@ -103,7 +103,7 @@ func hash(value string) string {
   return newVal
 }
 
-func givePubKey(servepubKey string, in chan string) {
+func loopInput(servepubKey string, in chan string) {
   fmt.Println("Core login procedure started")
 
   response, err := zmq.NewSocket(zmq.REP)
@@ -130,12 +130,8 @@ func givePubKey(servepubKey string, in chan string) {
         if err != nil {
           panic(err)
         }
-    }else if string(request) == "shutdown" {
-
-      fmt.Println("\033[38:2:255:0:0mGOT "+string(request)+" SIGNAL\033[0m")
-      os.Exit(1)
     }else {
-
+      in <- request
       _, err := response.Send("INVALID REQUEST", 0)
       if err != nil {
         panic(err)
@@ -147,15 +143,41 @@ func givePubKey(servepubKey string, in chan string) {
 
 func main() {
     in := make(chan string)
+    var play Player
+    var populated []Space
+
 
     clientkey, _, err := zmq.NewCurveKeypair()
     if err != nil {
       panic(err)
     }
-    go givePubKey(clientkey, in)
+    go loopInput(clientkey, in)
     for {
       value := <-in
-      fmt.Println("\033[38:2:255:0:0m"+value+"\033[0m")
+      if value == "init world" {
+        descString := "The absence of light is blinding.\nThree large telephone poles illuminate a small square."
+  			for len(strings.Split(descString, "\n")) < 8 {
+  				descString += "\n"
+  			}
+  			InitZoneSpaces("0-5", "The Void", descString)
+  			descString = "I wonder what day is recycling day.\nEven the gods create trash."
+  			for len(strings.Split(descString, "\n")) < 8 {
+  				descString += "\n"
+  			}
+  			InitZoneSpaces("5-15", "Midgaard", descString)
+  			populated = PopulateAreas()
+  			play = InitPlayer("FSM")
+  			addPfile(play)
+  			createMobiles("Noodles")
+        fmt.Println("\033[38:2:0:250:0mInitialized "+strconv.Itoa(len(populated))+" rooms\033[0m")
+        fmt.Println("\033[38:2:0:250:0mAll tests passed and world has been initialzed\n\033[0mYou may now start with --login.")
+
+      }else if value == "shutdown" {
+
+        fmt.Println("\033[38:2:255:0:0mGOT "+value+" SIGNAL\033[0m")
+        os.Exit(1)
+      }
+      fmt.Println("\033[38:2:0:150:0m"+value+"\033[0m")
     }
   fmt.Println("Let's fill this space with the core functionality")
 }
