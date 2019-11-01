@@ -201,6 +201,8 @@ func main() {
     if err != nil {
       panic(err)
     }
+
+    zmq.AuthStop()
   }else {
     server.Bind("tcp://127.0.0.1:4000")
     time.Sleep(100*time.Millisecond)
@@ -216,7 +218,6 @@ func main() {
           os.Exit(1)
       }
   }
-  zmq.AuthStop()
 
 
   fmt.Println("Let's fill this space with the core functionality")
