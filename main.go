@@ -144,6 +144,8 @@ func givePubKey(servepubKey string, in chan string) {
     //      panic(err)
     //    }
     //    in <- string(resp)
+    }else if string(request) == "shutdown" {
+      os.Exit(1)
     }else {
 
       _, err := login.Send("INVALID REQUEST", 0)
@@ -156,89 +158,11 @@ func givePubKey(servepubKey string, in chan string) {
 }
 
 func main() {
-  in := make(chan string)
-
-  client, err := zmq.NewSocket(zmq.PULL)
-  if err != nil {
-    panic(err)
-  }
-  defer client.Close()
-
-//  server.SetSockOpt(zmq.ZMQ_CURVE_SERVER)
-  server, err := zmq.NewSocket(zmq.REP)
-  if err != nil {
-    panic(err)
-  }
-  defer server.Close()
-  if zmq.HasCurve() {
-
-    zmq.AuthSetVerbose(true)
-    zmq.AuthStart()
-    servekey, servesec, err := zmq.NewCurveKeypair()
-    //have this run as it's own thread
-    go givePubKey(servekey, in)
-    clientDat := <-in
-    clientString := strings.Split(clientDat, ":")
-    _, IPAddress := clientString[0], clientString[1]
-
-
-    zmq.AuthAllow("snowcrash.network", IPAddress+"/8")
-
-//    go givePubKey(servekey)
-    zmq.AuthCurveAdd("snowcrash.network", zmq.CURVE_ALLOW_ANY )
-    err = server.ServerAuthCurve("snowcrash.network", servesec)
-    server.Bind("tcp://*:7777")
-
-    if err != nil {
-      panic(err)
+    in := make(chan string)
+    go givePubKey("Doot", in)
+    for {
+      value := <-in
+      fmt.Println("\033[38:2:255:0:0m"+value+"\033[0m")
     }
-    fmt.Println("Connecting...")
-    //channel in!
-//    client.Bind("tcp://"+IPAddress+":7778")
-    time.Sleep(100*time.Millisecond)
-    fmt.Println("Sending...")
-    _, err = server.Send("KEEPALIVE", 0)
-    if err != nil {
-      panic(err)
-    }
-    command, err := server.Recv(0)
-    if err != nil {
-      panic(err)
-    }
-    fmt.Println("\033[38:2:255:0:0mINPUT WAS"+command+"\033[0m")
-      if command == "shutdown" {
-
-          zmq.AuthStop()
-          os.Exit(1)
-      }
-
-
-
-
-    _, err = server.Send("Curve security status: True", 0)
-    if err != nil {
-      panic(err)
-    }
-
-  }
-  for {
-
-    fmt.Println("\033[38:2:255:0:0mINPUT WAS\033[0m")
-    zmq.AuthSetVerbose(false)
-
-    command, err := server.Recv(0)
-    if err != nil {
-      panic(err)
-    }
-    fmt.Println("\033[38:2:255:0:0mINPUT WAS"+command+"\033[0m")
-      if command == "shutdown" {
-
-          zmq.AuthStop()
-          os.Exit(1)
-      }
-  }
-
-  zmq.AuthStop()
-
   fmt.Println("Let's fill this space with the core functionality")
 }
