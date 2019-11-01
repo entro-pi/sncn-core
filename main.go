@@ -264,7 +264,5 @@ func main() {
         fmt.Println("\033[38:2:255:0:0mGOT "+value+" SIGNAL\033[0m")
         os.Exit(1)
       }
-      fmt.Println("\033[38:2:0:150:0m"+value+"\033[0m")
     }
-  fmt.Println("Let's fill this space with the core functionality")
 }
