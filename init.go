@@ -30,7 +30,7 @@ func initDigRoom(digFrame [][]int, zoneVnums string, zoneName string, play Playe
 
 
 
-func InitPlayer(name string) Player {
+func InitPlayer(name string, pass string) Player {
 	var play Player
 	var inv []int
 	var equ []int
@@ -43,6 +43,8 @@ func InitPlayer(name string) Player {
   play.Rezz = 17
   play.MaxRezz = play.Rezz
   play.Tech = 17
+  play.PlayerHash = hash(pass)
+
 
 	play.Str = 1
 	play.Int = 1

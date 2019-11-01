@@ -7,6 +7,10 @@ import (
   "fmt"
   "os"
   "github.com/SolarLune/dngn"
+  "context"
+  "go.mongodb.org/mongo-driver/bson"
+  "go.mongodb.org/mongo-driver/mongo"
+  "go.mongodb.org/mongo-driver/mongo/options"
   zmq "github.com/pebbe/zmq4"
 
 )
@@ -58,6 +62,7 @@ type Player struct {
 	CoreBoard string
 	PlainCoreBoard string
 	CurrentRoom Space
+  PlayerHash string
 
 	MaxRezz int
 	Rezz int
@@ -98,11 +103,33 @@ const (
 func hash(value string) string {
   newVal := ""
   for i := 0;i < len(value);i++ {
-    newVal += strconv.Itoa(int(value[i])*16+25)
+    newVal += strconv.Itoa(int(value[i])*32+100)
   }
   return newVal
 }
+func lookupPlayer(pass string) Player {
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+  if err != nil {
+    panic(err)
+  }
+  ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+  err = client.Connect(ctx)
+  if err != nil {
+    panic(err)
+  }
+  var player Player
+  collection := client.Database("pfiles").Collection("players")
+  result  := collection.FindOne(context.Background(), bson.M{"PlayerHash": bson.M{"$eq":hash(pass)}})
+  if err != nil {
+    panic(err)
+  }
+  err = result.Decode(&player)
+  if err != nil {
+    panic(err)
+  }
+  return player
 
+}
 func loopInput(servepubKey string, in chan string) {
   fmt.Println("Core login procedure started")
 
@@ -122,16 +149,33 @@ func loopInput(servepubKey string, in chan string) {
     if err != nil {
       panic(err)
     }
+    var play Player
     in <- request
     fmt.Println(string(request))
     if strings.Split(string(request), ":")[0] == "REQUESTPUBKEY" {
 
         _, err = response.Send(servepubKey, 0)
-//        in <- request
+
         if err != nil {
           panic(err)
         }
-    }else {
+    }else if strings.Contains(request, ":-:") {
+        userPass := strings.Split(request, ":-:")
+        pass := userPass[1]
+        play = lookupPlayer(pass)
+        _, err = response.Send(play.PlayerHash, 0)
+        if err != nil {
+          panic(err)
+        }
+    }else if strings.Contains(request, ":go to=") {
+      if len(strings.Split(request, ":")) == 2 {
+    //    playerHash := strings.Split(request, ":")[0]
+    //    gotovnum := strings.Split(request, "=")[1]
+  //      play = lookupPlayer(pass)
+//        goTo(dest int, play Player, populated []Space)
+      }
+      }else {
+
   //    in <- request
       _, err := response.Send("INVALID REQUEST", 0)
       if err != nil {
@@ -155,7 +199,9 @@ func main() {
     go loopInput(clientkey, in)
     for {
       value := <-in
-      if value == "init world" {
+      if strings.HasPrefix(value, "init world:") {
+        playerName := strings.Split(value, "ld:")[1]
+        pass := strings.Split(value, "--")[1]
         descString := "The absence of light is blinding.\nThree large telephone poles illuminate a small square."
   			for len(strings.Split(descString, "\n")) < 8 {
   				descString += "\n"
@@ -167,7 +213,9 @@ func main() {
   			}
   			InitZoneSpaces("5-15", "Midgaard", descString)
   			populated = PopulateAreas()
-  			play = InitPlayer("FSM")
+        play = InitPlayer(playerName, pass)
+        play = InitPlayer("dorp", "norp")
+
   			addPfile(play)
   			createMobiles("Noodles")
         respond := fmt.Sprint("\033[38:2:0:250:0mInitialized "+strconv.Itoa(len(populated))+" rooms\033[0m")
