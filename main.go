@@ -106,7 +106,7 @@ func hash(value string) string {
 func givePubKey(servepubKey string, in chan string) {
   fmt.Println("Core login procedure started")
 
-  response, err := zmq.NewSocket(zmq.PULL)
+  response, err := zmq.NewSocket(zmq.REQ)
   if err != nil {
     panic(err)
   }
