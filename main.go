@@ -178,7 +178,6 @@ func loopInput(servepubKey string, in chan string) {
       fmt.Println(request)
     }
 
-    fmt.Println(string(request))
     if strings.Split(string(request), ":")[0] == "REQUESTPUBKEY" {
 
         _, err = response.Send(servepubKey, 0)
