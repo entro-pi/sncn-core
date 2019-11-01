@@ -130,6 +130,27 @@ func lookupPlayer(pass string) Player {
   return player
 
 }
+func initPlayer(name string, pass string) Player {
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+  if err != nil {
+    panic(err)
+  }
+  ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+  err = client.Connect(ctx)
+  if err != nil {
+    panic(err)
+  }
+  play := InitPlayer(name, pass)
+
+  collection := client.Database("pfiles").Collection("players")
+  _, err = collection.InsertOne(context.Background(), bson.M{"name":play.Name,"title":play.Title,"playerhash": bson.M{"$eq":hash(pass)}})
+  if err != nil {
+    panic(err)
+  }
+  return play
+
+}
+
 func loopInput(servepubKey string, in chan string) {
   fmt.Println("Core login procedure started")
 
@@ -161,8 +182,8 @@ func loopInput(servepubKey string, in chan string) {
         }
     }else if strings.Contains(request, ":-:") {
         userPass := strings.Split(request, ":-:")
-        pass := userPass[1]
-        play = lookupPlayer(pass)
+        name, pass := userPass[0], userPass[1]
+        play = initPlayer(name, pass)
         _, err = response.Send(play.PlayerHash, 0)
         if err != nil {
           panic(err)
