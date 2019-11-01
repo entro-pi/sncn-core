@@ -105,26 +105,17 @@ func hash(value string) string {
 
 func givePubKey(servepubKey string, in chan string) {
   fmt.Println("Core login procedure started")
-  login, err := zmq.NewSocket(zmq.PUSH)
-  if err != nil {
-    panic(err)
-  }
-  defer login.Close()
+
   response, err := zmq.NewSocket(zmq.REP)
   if err != nil {
     panic(err)
   }
   defer response.Close()
-  //Preferred way to connect
-  //hostname := "tcp://snowcrashnetwork.vineyard.haus:7778"
   hostname := "tcp://*:7777"
-//  clientname := "tcp://192.168.122.1:7777"
   err = response.Bind(hostname)
   if err != nil {
     panic(err)
   }
-//  err = login.Connect(hostname)
-
   for {
     fmt.Println("IN LOOP")
     request, err := response.Recv(0)
@@ -139,18 +130,13 @@ func givePubKey(servepubKey string, in chan string) {
         if err != nil {
           panic(err)
         }
-    //    resp, err := response.Recv(0)
-    //    if err != nil {
-    //      panic(err)
-    //    }
-    //    in <- string(resp)
     }else if string(request) == "shutdown" {
 
       fmt.Println("\033[38:2:255:0:0mGOT "+string(request)+" SIGNAL\033[0m")
       os.Exit(1)
     }else {
 
-      _, err := login.Send("INVALID REQUEST", 0)
+      _, err := response.Send("INVALID REQUEST", 0)
       if err != nil {
         panic(err)
       }
