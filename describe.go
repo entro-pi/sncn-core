@@ -172,10 +172,10 @@ func showChat() string {
 		}
 		chatPos := fmt.Sprintf("\033["+strconv.Itoa(count+3)+";180H")
 		count++
-		fmt.Printf(chatPos)
 		if row >= 51 {
 			row = 0
 		}
+    chatMess.Message += chatPos
 		message, position := AssembleComposeCel(chatMess, row)
 		row = position
     messages = append(messages, message)
