@@ -143,7 +143,7 @@ func initPlayer(name string, pass string) Player {
   play := InitPlayer(name, pass)
 
   collection := client.Database("pfiles").Collection("Players")
-  _, err = collection.InsertOne(context.Background(), bson.M{"name":play.Name,"title":play.Title,"playerhash": bson.M{"$eq":hash(pass)}})
+  _, err = collection.InsertOne(context.Background(), bson.M{"name":play.Name,"title":play.Title,"playerhash": hash(pass)})
   if err != nil {
     panic(err)
   }
@@ -219,7 +219,8 @@ func main() {
     in := make(chan string)
     var play Player
     var populated []Space
-
+    fmt.Println(hash("bad"))
+    fmt.Println(hash("bad"))
 
     clientkey, _, err := zmq.NewCurveKeypair()
     if err != nil {
