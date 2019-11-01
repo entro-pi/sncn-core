@@ -210,6 +210,7 @@ func main() {
   for {
 
     fmt.Println("\033[38:2:255:0:0mINPUT WAS\033[0m")
+    zmq.AuthSetVerbose(false)
     command, err := client.Recv(0)
     if err != nil {
       panic(err)
