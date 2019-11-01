@@ -197,7 +197,12 @@ func loopInput(servepubKey string, in chan string) {
         userPass := strings.Split(request, ":=:")
         pass := userPass[1]
         play = lookupPlayer(pass)
-        _, err = response.Send(play.PlayerHash, 0)
+        playBytes, err := bson.Marshal(play)
+        if err != nil {
+          panic(err)
+        }
+
+        _, err = response.SendBytes(playBytes, 0)
         if err != nil {
           panic(err)
         }
