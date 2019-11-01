@@ -206,7 +206,6 @@ func main() {
           break INPUT
       }
   }
-  fmt.Println(reply)
   zmq.AuthStop()
 
 
