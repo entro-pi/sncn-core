@@ -197,6 +197,10 @@ func main() {
 //    client.Bind("tcp://"+IPAddress+":7778")
     time.Sleep(100*time.Millisecond)
     fmt.Println("Sending...")
+    _, err = server.Send("KEEPALIVE", 0)
+    if err != nil {
+      panic(err)
+    }
     command, err := server.Recv(0)
     if err != nil {
       panic(err)
