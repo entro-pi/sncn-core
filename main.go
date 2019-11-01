@@ -139,11 +139,11 @@ func givePubKey(servepubKey string, in chan string) {
         if err != nil {
           panic(err)
         }
-        resp, err := response.Recv(0)
-        if err != nil {
-          panic(err)
-        }
-        in <- string(resp)
+    //    resp, err := response.Recv(0)
+    //    if err != nil {
+    //      panic(err)
+    //    }
+    //    in <- string(resp)
     }else {
 
       _, err := login.Send("INVALID REQUEST", 0)
