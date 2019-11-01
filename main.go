@@ -118,7 +118,7 @@ func lookupPlayer(pass string) Player {
     panic(err)
   }
   var player Player
-  collection := client.Database("pfiles").Collection("players")
+  collection := client.Database("pfiles").Collection("Players")
   result  := collection.FindOne(context.Background(), bson.M{"PlayerHash": bson.M{"$eq":hash(pass)}})
   if err != nil {
     panic(err)
@@ -142,7 +142,7 @@ func initPlayer(name string, pass string) Player {
   }
   play := InitPlayer(name, pass)
 
-  collection := client.Database("pfiles").Collection("players")
+  collection := client.Database("pfiles").Collection("Players")
   _, err = collection.InsertOne(context.Background(), bson.M{"name":play.Name,"title":play.Title,"playerhash": bson.M{"$eq":hash(pass)}})
   if err != nil {
     panic(err)
