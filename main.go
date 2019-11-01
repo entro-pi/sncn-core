@@ -82,7 +82,7 @@ func main() {
     if err != nil {
       panic(err)
     }
-    givePubKey(servekey)
+    givePubKey(string("dummykey"))
   }
   if zmq.HasCurve() {
     zmq.AuthSetVerbose(true)
