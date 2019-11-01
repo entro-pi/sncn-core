@@ -122,16 +122,17 @@ func loopInput(servepubKey string, in chan string) {
     if err != nil {
       panic(err)
     }
+    in <- request
     fmt.Println(string(request))
     if strings.Split(string(request), ":")[0] == "REQUESTPUBKEY" {
 
         _, err = response.Send(servepubKey, 0)
-        in <- request
+//        in <- request
         if err != nil {
           panic(err)
         }
     }else {
-      in <- request
+  //    in <- request
       _, err := response.Send("INVALID REQUEST", 0)
       if err != nil {
         panic(err)
@@ -169,7 +170,9 @@ func main() {
   			play = InitPlayer("FSM")
   			addPfile(play)
   			createMobiles("Noodles")
-        fmt.Println("\033[38:2:0:250:0mInitialized "+strconv.Itoa(len(populated))+" rooms\033[0m")
+        respond := fmt.Sprint("\033[38:2:0:250:0mInitialized "+strconv.Itoa(len(populated))+" rooms\033[0m")
+        fmt.Printf(respond)
+
         fmt.Println("\033[38:2:0:250:0mAll tests passed and world has been initialzed\n\033[0mYou may now start with --login.")
 
       }else if value == "shutdown" {
