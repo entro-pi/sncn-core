@@ -162,8 +162,8 @@ func showChat() string {
 
 	count := 0
 	var row int
-  position := 0
-  message := ""
+  var messages []string
+  messChat := ""
   for mess.Next(context.Background()) {
 		var chatMess Chat
 		err := mess.Decode(&chatMess)
@@ -176,8 +176,9 @@ func showChat() string {
 		if row >= 51 {
 			row = 0
 		}
-		message, position = AssembleComposeCel(chatMess, row)
+		message, position := AssembleComposeCel(chatMess, row)
 		row = position
+    messages = append(messages, message)
 //		fmt.Printf(message)
 //		fmt.Printf(chatStart)
 //		fmt.Printf(chatMess.Message + " ")
@@ -185,7 +186,10 @@ func showChat() string {
 //  	fmt.Printf(end)
 
 	}
-  return message
+  for i := 0;i < len(messages);i++ {
+    messChat += messages[i]
+  }
+  return messChat
 
 }
 func drawDig(digFrame [][]int, zonePos []int) {

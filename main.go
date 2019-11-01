@@ -204,7 +204,7 @@ func loopInput(servepubKey string, in chan string) {
     }else if strings.Contains(request, "+=+") {
       message := strings.Split(request, "+=+")[1]
       playerName := strings.Split(request, "+=+")[0]
-      fmt.Println("Creating chat)")
+      fmt.Println("Creating chat")
       createChat(message, playerName)
       toSend := showChat()
       fmt.Println("Sending chat")
