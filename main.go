@@ -168,7 +168,7 @@ func main() {
   defer client.Close()
 
 //  server.SetSockOpt(zmq.ZMQ_CURVE_SERVER)
-  server, err := zmq.NewSocket(zmq.PUSH)
+  server, err := zmq.NewSocket(zmq.REP)
   if err != nil {
     panic(err)
   }
@@ -190,32 +190,42 @@ func main() {
 //    go givePubKey(servekey)
     zmq.AuthCurveAdd("snowcrash.network", zmq.CURVE_ALLOW_ANY )
     err = server.ServerAuthCurve("snowcrash.network", servesec)
-    server.Bind("tcp://*:7778")
+    server.Bind("tcp://*:7777")
 
     if err != nil {
       panic(err)
     }
     fmt.Println("Connecting...")
     //channel in!
-    client.Bind("tcp://"+IPAddress+":7778")
+//    client.Bind("tcp://"+IPAddress+":7778")
     time.Sleep(100*time.Millisecond)
     fmt.Println("Sending...")
+    command, err := server.Recv(0)
+    if err != nil {
+      panic(err)
+    }
+    fmt.Println("\033[38:2:255:0:0mINPUT WAS"+command+"\033[0m")
+      if command == "shutdown" {
+
+          zmq.AuthStop()
+          os.Exit(1)
+      }
+
+
+
+
     _, err = server.Send("Curve security status: True", 0)
     if err != nil {
       panic(err)
     }
 
-  }else {
-    server.Bind("tcp://127.0.0.1:7778")
-    time.Sleep(100*time.Millisecond)
-    server.Send("Curve security status: False", 0)
   }
   for {
 
     fmt.Println("\033[38:2:255:0:0mINPUT WAS\033[0m")
     zmq.AuthSetVerbose(false)
 
-    command, err := client.Recv(0)
+    command, err := server.Recv(0)
     if err != nil {
       panic(err)
     }
