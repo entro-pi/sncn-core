@@ -5,6 +5,7 @@ import (
   "strconv"
   "strings"
   "fmt"
+  "os"
   "github.com/SolarLune/dngn"
   zmq "github.com/pebbe/zmq4"
 
@@ -212,7 +213,7 @@ func main() {
     }
     fmt.Println("\033[38:2:255:0:0mINPUT WAS"+command+"\033[0m")
       if command == "shutdown" {
-
+          os.Exit(1)
       }
   }
   zmq.AuthStop()
