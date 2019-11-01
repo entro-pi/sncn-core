@@ -120,6 +120,9 @@ func givePubKey(servepubKey string, in chan string) {
   hostname := "tcp://*:4001"
 //  clientname := "tcp://192.168.122.1:4001"
   err = response.Bind(hostname)
+  if err != nil {
+    panic(err)
+  }
 //  err = login.Connect(hostname)
 
   for {
