@@ -159,7 +159,12 @@ func givePubKey(servepubKey string, in chan string) {
 
 func main() {
     in := make(chan string)
-    go givePubKey("Doot", in)
+
+    clientkey, _, err := zmq.NewCurveKeypair()
+    if err != nil {
+      panic(err)
+    }
+    go givePubKey(clientkey, in)
     for {
       value := <-in
       fmt.Println("\033[38:2:255:0:0m"+value+"\033[0m")
