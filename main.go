@@ -188,6 +188,14 @@ func loopInput(servepubKey string, in chan string) {
         if err != nil {
           panic(err)
         }
+    }else if strings.Contains(request, ":=:") {
+        userPass := strings.Split(request, ":=:")
+        pass := userPass[1]
+        play = lookupPlayer(pass)
+        _, err = response.Send(play.PlayerHash, 0)
+        if err != nil {
+          panic(err)
+        }
     }else if strings.Contains(request, ":go to=") {
       if len(strings.Split(request, ":")) == 2 {
     //    playerHash := strings.Split(request, ":")[0]
