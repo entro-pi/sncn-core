@@ -202,23 +202,27 @@ func main() {
       panic(err)
     }
 
-    zmq.AuthStop()
   }else {
     server.Bind("tcp://127.0.0.1:4000")
     time.Sleep(100*time.Millisecond)
     server.Send("Curve security status: False", 0)
   }
   for {
+
+    fmt.Println("\033[38:2:255:0:0mINPUT WAS\033[0m")
     command, err := client.Recv(0)
     if err != nil {
       panic(err)
     }
     fmt.Println("\033[38:2:255:0:0mINPUT WAS"+command+"\033[0m")
       if command == "shutdown" {
+
+          zmq.AuthStop()
           os.Exit(1)
       }
   }
 
+  zmq.AuthStop()
 
   fmt.Println("Let's fill this space with the core functionality")
 }
