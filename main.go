@@ -110,7 +110,7 @@ func givePubKey(servepubKey string, in chan string) {
     panic(err)
   }
   defer login.Close()
-  response, err := zmq.NewSocket(zmq.PULL)
+  response, err := zmq.NewSocket(zmq.REP)
   if err != nil {
     panic(err)
   }
@@ -133,11 +133,8 @@ func givePubKey(servepubKey string, in chan string) {
     }
     fmt.Println(string(request))
     if strings.Split(string(request), ":")[0] == "REQUESTPUBKEY" {
-        err := login.Connect("tcp://"+strings.Split(string(request), ":")[1]+":7777")
-        if err != nil {
-          panic(err)
-        }
-        _, err = login.Send(servepubKey, 0)
+
+        _, err = response.Send(servepubKey, 0)
         in <- request
         if err != nil {
           panic(err)
