@@ -194,7 +194,7 @@ func main() {
     }
     fmt.Println("Connecting...")
     //channel in!
-    client.Connect("tcp://"+IPAddress+":4000")
+    client.Bind("tcp://"+IPAddress+":4000")
     time.Sleep(100*time.Millisecond)
     fmt.Println("Sending...")
     _, err = server.Send("Curve security status: True", 0)
@@ -211,6 +211,7 @@ func main() {
 
     fmt.Println("\033[38:2:255:0:0mINPUT WAS\033[0m")
     zmq.AuthSetVerbose(false)
+
     command, err := client.Recv(0)
     if err != nil {
       panic(err)
