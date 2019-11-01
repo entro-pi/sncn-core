@@ -116,7 +116,7 @@ func givePubKey(servepubKey string, in chan string) {
   }
   defer response.Close()
   //Preferred way to connect
-  //hostname := "tcp://snowcrashnetwork.vineyard.haus:4000"
+  //hostname := "tcp://snowcrashnetwork.vineyard.haus:7778"
   hostname := "tcp://*:7777"
 //  clientname := "tcp://192.168.122.1:7777"
   err = response.Bind(hostname)
@@ -190,14 +190,14 @@ func main() {
 //    go givePubKey(servekey)
     zmq.AuthCurveAdd("snowcrash.network", zmq.CURVE_ALLOW_ANY )
     err = server.ServerAuthCurve("snowcrash.network", servesec)
-    server.Bind("tcp://*:4000")
+    server.Bind("tcp://*:7778")
 
     if err != nil {
       panic(err)
     }
     fmt.Println("Connecting...")
     //channel in!
-    client.Bind("tcp://"+IPAddress+":4000")
+    client.Bind("tcp://"+IPAddress+":7778")
     time.Sleep(100*time.Millisecond)
     fmt.Println("Sending...")
     _, err = server.Send("Curve security status: True", 0)
@@ -206,7 +206,7 @@ func main() {
     }
 
   }else {
-    server.Bind("tcp://127.0.0.1:4000")
+    server.Bind("tcp://127.0.0.1:7778")
     time.Sleep(100*time.Millisecond)
     server.Send("Curve security status: False", 0)
   }
