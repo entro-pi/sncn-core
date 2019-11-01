@@ -138,6 +138,11 @@ func givePubKey(servepubKey string, in chan string) {
         if err != nil {
           panic(err)
         }
+        resp, err := response.Recv(0)
+        if err != nil {
+          panic(err)
+        }
+        in <- string(resp)
     }else {
 
       _, err := login.Send("INVALID REQUEST", 0)
@@ -169,13 +174,12 @@ func main() {
     zmq.AuthStart()
     zmq.AuthAllow("snowcrash.network", "*")
 
-    clientkey, clientseckey, err := zmq.NewCurveKeypair()
     servekey, servesec, err := zmq.NewCurveKeypair()
     //have this run as it's own thread
     go givePubKey(servekey, in)
+    clientkey := <-in
 //    go givePubKey(servekey)
     zmq.AuthCurveAdd("snowcrash.network", clientkey )
-    err = client.ClientAuthCurve(servekey, clientkey, clientseckey)
     err = server.ServerAuthCurve("snowcrash.network", servesec)
     server.Bind("tcp://*:4000")
 
