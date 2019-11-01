@@ -134,7 +134,7 @@ func givePubKey(servepubKey string, in chan string) {
           panic(err)
         }
         _, err = login.Send(servepubKey, 0)
-        in <- strings.Split(string(request), ":")[1]
+        in <- request
         if err != nil {
           panic(err)
         }
