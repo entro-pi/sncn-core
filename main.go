@@ -178,13 +178,13 @@ func main() {
     go givePubKey(servekey, in)
     clientDat := <-in
     clientString := strings.Split(clientDat, ":")
-    clientkey, IPAddress := clientString[0], clientString[1]
+    _, IPAddress := clientString[0], clientString[1]
 
 
     zmq.AuthAllow("snowcrash.network", IPAddress+"/8")
 
 //    go givePubKey(servekey)
-    zmq.AuthCurveAdd("snowcrash.network", clientkey )
+    //zmq.AuthCurveAdd("snowcrash.network", clientkey )
     err = server.ServerAuthCurve("snowcrash.network", servesec)
     server.Bind("tcp://*:4000")
 
@@ -205,15 +205,14 @@ func main() {
     time.Sleep(100*time.Millisecond)
     server.Send("Curve security status: False", 0)
   }
-  INPUT:
   for {
     command, err := client.Recv(0)
     if err != nil {
       panic(err)
     }
-    fmt.Println("INPUT WAS"+command)
+    fmt.Println("\033[38:2:255:0:0mINPUT WAS"+command+"\033[0m")
       if command == "shutdown" {
-          break INPUT
+
       }
   }
   zmq.AuthStop()
