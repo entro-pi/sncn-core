@@ -145,6 +145,8 @@ func givePubKey(servepubKey string, in chan string) {
     //    }
     //    in <- string(resp)
     }else if string(request) == "shutdown" {
+
+      fmt.Println("\033[38:2:255:0:0mGOT "+string(request)+" SIGNAL\033[0m")
       os.Exit(1)
     }else {
 
