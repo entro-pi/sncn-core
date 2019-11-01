@@ -102,7 +102,7 @@ func hash(value string) string {
   return newVal
 }
 
-func givePubKey(servepubKey string) {
+func givePubKey(servepubKey string, in chan string) {
   fmt.Println("Core login procedure started")
   login, err := zmq.NewSocket(zmq.PUSH)
   if err != nil {
@@ -134,7 +134,7 @@ func givePubKey(servepubKey string) {
           panic(err)
         }
         _, err = login.Send(servepubKey, 0)
-
+        in <- strings.Split(string(request), ":")[1]
         if err != nil {
           panic(err)
         }
@@ -150,7 +150,7 @@ func givePubKey(servepubKey string) {
 }
 
 func main() {
-
+  in := make(chan string)
 
   client, err := zmq.NewSocket(zmq.PULL)
   if err != nil {
@@ -172,9 +172,8 @@ func main() {
     clientkey, clientseckey, err := zmq.NewCurveKeypair()
     servekey, servesec, err := zmq.NewCurveKeypair()
     //have this run as it's own thread
-    go givePubKey(servekey)
+    go givePubKey(servekey, in)
 //    go givePubKey(servekey)
-
     zmq.AuthCurveAdd("snowcrash.network", clientkey )
     err = client.ClientAuthCurve(servekey, clientkey, clientseckey)
     err = server.ServerAuthCurve("snowcrash.network", servesec)
@@ -184,7 +183,9 @@ func main() {
       panic(err)
     }
     fmt.Println("Connecting...")
-    client.Connect("tcp://127.0.0.1:4000")
+    //channel in!
+    response := <-in
+    client.Connect("tcp://"+response+":4000")
     time.Sleep(100*time.Millisecond)
     fmt.Println("Sending...")
     _, err = server.Send("Curve security status: True", 0)
