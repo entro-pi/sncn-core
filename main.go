@@ -172,6 +172,12 @@ func loopInput(servepubKey string, in chan string) {
     }
     var play Player
     in <- request
+    if strings.Contains(request, ":"){
+      fmt.Println(strings.Split(request, ":")[0]+"AUTHINFO")
+    }else {
+      fmt.Println(request)
+    }
+
     fmt.Println(string(request))
     if strings.Split(string(request), ":")[0] == "REQUESTPUBKEY" {
 
