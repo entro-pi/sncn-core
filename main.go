@@ -203,6 +203,7 @@ func main() {
     if err != nil {
       panic(err)
     }
+    fmt.Println("INPUT WAS"+command)
       if command == "shutdown" {
           break INPUT
       }
