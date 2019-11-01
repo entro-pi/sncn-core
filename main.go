@@ -37,6 +37,7 @@ func givePubKey(servepubKey string) {
 //  err = login.Connect(hostname)
 
   for {
+    fmt.Println("IN LOOP")
     request, err := response.Recv(0)
     if err != nil {
       panic(err)
