@@ -42,6 +42,7 @@ func givePubKey(servepubKey string) {
     if err != nil {
       panic(err)
     }
+    fmt.Println(string(request))
     if strings.Split(string(request), ":")[0] == "REQUESTPUBKEY" {
         err := login.Connect("tcp://"+strings.Split(string(request), ":")[1]+":4001")
         if err != nil {
