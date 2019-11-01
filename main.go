@@ -79,13 +79,6 @@ func main() {
     panic(err)
   }
   defer server.Close()
-  for {
-    _, _, err := zmq.NewCurveKeypair()
-    if err != nil {
-      panic(err)
-    }
-    givePubKey(string("dummykey"))
-  }
   if zmq.HasCurve() {
     zmq.AuthSetVerbose(true)
     zmq.AuthStart()
@@ -94,7 +87,7 @@ func main() {
     clientkey, clientseckey, err := zmq.NewCurveKeypair()
     servekey, servesec, err := zmq.NewCurveKeypair()
     //have this run as it's own thread
-//    go givePubKey(servekey)
+    go givePubKey(servekey)
 
     zmq.AuthCurveAdd("snowcrash.network", clientkey )
     err = client.ClientAuthCurve(servekey, clientkey, clientseckey)
