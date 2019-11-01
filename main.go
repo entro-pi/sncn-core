@@ -117,8 +117,8 @@ func givePubKey(servepubKey string, in chan string) {
   defer response.Close()
   //Preferred way to connect
   //hostname := "tcp://snowcrashnetwork.vineyard.haus:4000"
-  hostname := "tcp://*:4001"
-//  clientname := "tcp://192.168.122.1:4001"
+  hostname := "tcp://*:7777"
+//  clientname := "tcp://192.168.122.1:7777"
   err = response.Bind(hostname)
   if err != nil {
     panic(err)
@@ -133,7 +133,7 @@ func givePubKey(servepubKey string, in chan string) {
     }
     fmt.Println(string(request))
     if strings.Split(string(request), ":")[0] == "REQUESTPUBKEY" {
-        err := login.Connect("tcp://"+strings.Split(string(request), ":")[1]+":4001")
+        err := login.Connect("tcp://"+strings.Split(string(request), ":")[1]+":7777")
         if err != nil {
           panic(err)
         }
