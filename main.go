@@ -119,7 +119,7 @@ func lookupPlayer(pass string) Player {
   }
   var player Player
   collection := client.Database("pfiles").Collection("Players")
-  result  := collection.FindOne(context.Background(), bson.M{"PlayerHash": bson.M{"$eq":hash(pass)}})
+  result  := collection.FindOne(context.Background(), bson.M{"playerhash": bson.M{"$eq":hash(pass)}})
   if err != nil {
     panic(err)
   }
