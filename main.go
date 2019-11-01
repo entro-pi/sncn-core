@@ -141,9 +141,12 @@ func initPlayer(name string, pass string) Player {
     panic(err)
   }
   play := InitPlayer(name, pass)
-
+  playBSON, err := bson.Marshal(play)
+  if err != nil {
+    panic(err)
+  }
   collection := client.Database("pfiles").Collection("Players")
-  _, err = collection.InsertOne(context.Background(), bson.M{"name":play.Name,"title":play.Title,"playerhash": hash(pass)})
+  _, err = collection.InsertOne(context.Background(), playBSON)
   if err != nil {
     panic(err)
   }
