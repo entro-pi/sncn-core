@@ -184,7 +184,7 @@ func main() {
     zmq.AuthAllow("snowcrash.network", IPAddress+"/8")
 
 //    go givePubKey(servekey)
-    //zmq.AuthCurveAdd("snowcrash.network", clientkey )
+    zmq.AuthCurveAdd("snowcrash.network", zmq.CURVE_ALLOW_ANY )
     err = server.ServerAuthCurve("snowcrash.network", servesec)
     server.Bind("tcp://*:4000")
 
