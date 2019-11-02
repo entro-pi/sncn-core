@@ -13,6 +13,8 @@ import (
   "go.mongodb.org/mongo-driver/mongo"
   "go.mongodb.org/mongo-driver/mongo/options"
   zmq "github.com/pebbe/zmq4"
+//  "github.com/gorilla/websocket"
+  "golang.org/x/net/websocket"
 
 )
 
@@ -98,54 +100,60 @@ const (
 	chatStart = "\033[38:2:200:50:50m{{=\033[38:2:150:50:150m"
 	chatEnd = "\033[38:2:200:50:50m=}}"
 	end = "\033[0m"
-  grapevine = "tcp://grapevine.haus/socket"
-  callback = "tcp://snowcrashnetwork.vineyard.haus/auth"
+  grapevine = "wss://grapevine.haus/socket"
+  callback = "https://127.0.0.1/auth:7787"
 )
 
+// client dials the WebSocket echo server at the given url.
+// It then sends it 5 different messages and echo's the server's
+// response to each.
+func client(clientid string, secret string, url string) error {
+    _, cancel := context.WithTimeout(context.Background(), time.Minute)
+    defer cancel()
+
+    fmt.Println("IN CLIENT FUNC")
+    ws, err := websocket.Dial(url, "", callback)
+    if err != nil {
+        return err
+    }
+    defer ws.Close()
+    auth := `{  "event": "authenticate",  "payload": {    "client_id": "`+clientid+`",    "client_secret": "`+secret+`",    "supports": ["channels"],    "channels": ["grapevine"],    "version": "1.0.0",    "user_agent": "snowcrash.network v 0.01"  }}`
+    //authSend := []byte(auth)
+    for i := 0;i < 1;i++{
+      //fmt.Println(authSend)
+      _, err = ws.Write([]byte(auth))
+      if err != nil {
+          return err
+      }
+  //    fmt.Println(written)
+
+      var msg = make([]byte, 512)
+      _, err = ws.Read(msg)
+      if err != nil {
+          return err
+      }
+//      fmt.Printf(strconv.Itoa(readB))
+
+      fmt.Printf("received: %v\n", string(msg))
+
+    }
+    return nil
+}
 func grapeVine() {
-  sendSocket, err := zmq.NewSocket(zmq.REQ)
-  if err != nil {
-    panic(err)
-  }
-
-  response, err := zmq.NewSocket(zmq.REP)
-  if err != nil {
-    panic(err)
-  }
-  err = response.Connect("tcp://*:7787")
-  if err != nil {
-    panic(err)
-  }
-
   clientFile, err := os.Open("client")
   if err != nil {
     panic(err)
   }
-  clientid, _ := ioutil.ReadAll(clientFile)
+  clientid, err := ioutil.ReadAll(clientFile)
   secretFile, err := os.Open("secret")
   if err != nil {
     panic(err)
   }
-  secret, _ := ioutil.ReadAll(secretFile)
-
-
-  sendSocket.Connect(grapevine)
-  auth := `{  "event": "authenticate",  "payload": {    "client_id": "`+string(clientid)+`",    "client_secret": "`+string(secret)+`",    "supports": ["channels"],    "channels": ["grapevine"],    "version": "1.0.0",    "user_agent": "snowcrash.network v 0.01"  }}`
-  _, err = sendSocket.Send(auth, 0)
-
-  for {
-    input, err := sendSocket.Recv(0)
-    if err != nil {
-      panic(err)
-    }
-    fmt.Println(input)
-    result, err := response.Recv(0)
-    if err != nil {
-      panic(err)
-    }
-    fmt.Println(result)
-    os.Exit(1)
+  secret, err := ioutil.ReadAll(secretFile)
+  if err != nil {
+    panic(err)
   }
+  client(string(clientid), string(secret), grapevine)
 }
 
 func hash(value string) string {
