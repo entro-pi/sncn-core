@@ -137,6 +137,7 @@ func client(clientid string, secret string, url string, player chan string) erro
     defer cancel()
     //var playerList []string
     fmt.Println("IN CLIENT FUNC")
+    var playing []string
     ws, err := websocket.Dial(url, "", callback)
     if err != nil {
         return err
@@ -189,11 +190,17 @@ func client(clientid string, secret string, url string, player chan string) erro
         heart.Event = "heartbeat"
         select {
         case playersLog := <- player:
-          if playersLog != "" {
+            playing = append(playing, playersLog)
             heart.Payload.Players = append(heart.Payload.Players, playersLog)
-          }
         default:
-          heart.Payload.Players = append(heart.Payload.Players, "none")
+          if len(heart.Payload.Players) <= 0  && len(playing) >= 1 {
+            heart.Payload.Players = playing
+          }else if len(heart.Payload.Players) <= 0 {
+            heart.Payload.Players = append(heart.Payload.Players, "none")
+          }
+          if heart.Payload.Players[0] != "none" {
+            heart.Payload.Players = playing
+          }
         }
         heartJSON, err := json.Marshal(heart)
         if err != nil {
@@ -214,7 +221,6 @@ func client(clientid string, secret string, url string, player chan string) erro
               return err
           }
 
-          heartbeat = heartbeat[0:]
 
         }
 
