@@ -6,6 +6,7 @@ import (
   "strings"
   "fmt"
   "os"
+  "io/ioutil"
   "github.com/SolarLune/dngn"
   "context"
   "go.mongodb.org/mongo-driver/bson"
@@ -98,32 +99,52 @@ const (
 	chatEnd = "\033[38:2:200:50:50m=}}"
 	end = "\033[0m"
   grapevine = "tcp://grapevine.haus/socket"
-
+  callback = "tcp://snowcrashnetwork.vineyard.haus/auth"
 )
 
 func grapeVine() {
-  socket, err := zmq.NewSocket(zmq.REQ)
+  sendSocket, err := zmq.NewSocket(zmq.REQ)
   if err != nil {
     panic(err)
   }
-  socket.Connect(grapevine)
-  auth := string(
-    "{
-  "event": "authenticate",
-  "payload": {
-    "client_id": "client id",
-    "client_secret": "client secret",
-    "supports": ["channels"],
-    "channels": ["grapevine"],
-    "version": "1.0.0",
-    "user_agent": "snowcrash.network v 0.01"
-  }"
-}
-  )
-  _, err := socket.Send()
+
+  response, err := zmq.NewSocket(zmq.REP)
+  if err != nil {
+    panic(err)
+  }
+  err = response.Bind(callback+":443")
+  if err != nil {
+    panic(err)
+  }
+
+  clientFile, err := os.Open("client")
+  if err != nil {
+    panic(err)
+  }
+  clientid, _ := ioutil.ReadAll(clientFile)
+  secretFile, err := os.Open("secret")
+  if err != nil {
+    panic(err)
+  }
+  secret, _ := ioutil.ReadAll(secretFile)
+
+
+  sendSocket.Connect(grapevine)
+  auth := `{  "event": "authenticate",  "payload": {    "client_id": "`+string(clientid)+`",    "client_secret": "`+string(secret)+`",    "supports": ["channels"],    "channels": ["grapevine"],    "version": "1.0.0",    "user_agent": "snowcrash.network v 0.01"  }}`
+  _, err = sendSocket.Send(auth, 0)
 
   for {
-
+    input, err := sendSocket.Recv(0)
+    if err != nil {
+      panic(err)
+    }
+    fmt.Println(input)
+    result, err := response.Recv(0)
+    if err != nil {
+      panic(err)
+    }
+    fmt.Println(result)
+    os.Exit(1)
   }
 }
 
