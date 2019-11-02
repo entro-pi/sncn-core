@@ -86,7 +86,17 @@ type Payload struct {
   Channels []string
   Version string
   User_agent string
+  Unicode string
+  Status string
 
+}
+type HeartPayload struct {
+  Players []string
+}
+
+type Heartbeat struct {
+  Event string
+  Payload HeartPayload
 }
 
 type Authenticator struct {
@@ -146,24 +156,60 @@ func client(clientid string, secret string, url string) error {
     }
     authJSONString := strings.ToLower(string(authJSON))
     fmt.Println(authJSONString)
-
+    authorized := false
     //authSend := []byte(auth)
-    for i := 0;i < 1;i++{
-      //fmt.Println(authSend)
-      _, err = ws.Write([]byte(authJSONString))
-      if err != nil {
-          return err
-      }
-  //    fmt.Println(written)
+    for {
+      if !authorized {
+        //Authenticate
+        _, err = ws.Write([]byte(authJSONString))
+        if err != nil {
+            return err
+        }
 
-      var msg = make([]byte, 512)
-      _, err = ws.Read(msg)
-      if err != nil {
-          return err
-      }
-//      fmt.Printf(strconv.Itoa(readB))
+        var msg = make([]byte, 1024)
+        _, err = ws.Read(msg)
+        if err != nil {
+            return err
+        }
+        fmt.Println(string(msg))
+        authorized = true
+//        var authorizedMess Authenticator
+//        err = json.Unmarshal(msg, &authorizedMess)
+//        if err != nil {
+//          fmt.Println(err)
+//        }
+//        if authorizedMess.Payload.Status == "success" {
+//          authorized = true
+//        }
 
-      fmt.Printf("received: %v\n", string(msg))
+      }else {
+        var heart Heartbeat
+        heart.Event = "heartbeat"
+        heart.Payload.Players = append(heart.Payload.Players, "Wallace")
+        heartJSON, err := json.Marshal(heart)
+        if err != nil {
+          panic(err)
+        }
+        heartJSONString := strings.ToLower(string(heartJSON))
+        var heartbeat = make([]byte, 512)
+        _, err = ws.Read(heartbeat)
+        if err != nil {
+            return err
+        }
+        fmt.Println(string(heartbeat))
+        if strings.Contains(string(heartbeat), "heartbeat") {
+          fmt.Println("\033[38:2:200:0:0mBeep.\033[0m")
+          _, err = ws.Write([]byte(heartJSONString))
+          if err != nil {
+              return err
+          }
+          heartbeat = heartbeat[0:]
+
+        }
+
+
+
+      }
 
     }
     return nil
@@ -184,7 +230,7 @@ func grapeVine() {
   }
   fmt.Println(strings.TrimSpace(string(clientid)))
   fmt.Println(strings.TrimSpace(string(secret)))
-  client(string(clientid), string(secret), grapevine)
+  go client(string(clientid), string(secret), grapevine)
 }
 
 func hash(value string) string {
