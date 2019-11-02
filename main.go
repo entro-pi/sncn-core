@@ -127,6 +127,7 @@ func lookupPlayer(pass string) Player {
   if err != nil {
     fmt.Println("\033[38:2:150:0:150mPlayerfile requested was not found\033[0m")
     var noob Player
+    noob.Name = "NEWB"
     return noob
   }
   return player
