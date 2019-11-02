@@ -15,6 +15,7 @@ import (
   zmq "github.com/pebbe/zmq4"
 //  "github.com/gorilla/websocket"
   "golang.org/x/net/websocket"
+  "encoding/json"
 
 )
 
@@ -78,6 +79,20 @@ type Player struct {
 	Con int
 	Cha int
 }
+type Payload struct {
+  Client_id string
+  Client_secret string
+  Supports []string
+  Channels []string
+  Version string
+  User_agent string
+
+}
+
+type Authenticator struct {
+  Event string
+  Payload Payload
+}
 
 type Mobile struct {
 	Name string
@@ -101,7 +116,7 @@ const (
 	chatEnd = "\033[38:2:200:50:50m=}}"
 	end = "\033[0m"
   grapevine = "wss://grapevine.haus/socket"
-  callback = "https://127.0.0.1/auth:7787"
+  callback = "https://snowcrashnetwork.grapevine.haus/auth"
 )
 
 // client dials the WebSocket echo server at the given url.
@@ -117,11 +132,25 @@ func client(clientid string, secret string, url string) error {
         return err
     }
     defer ws.Close()
-    auth := `{  "event": "authenticate",  "payload": {    "client_id": "`+clientid+`",    "client_secret": "`+secret+`",    "supports": ["channels"],    "channels": ["grapevine"],    "version": "1.0.0",    "user_agent": "snowcrash.network v 0.01"  }}`
+    var auth Authenticator
+    auth.Event = "authenticate"
+    auth.Payload.Client_id = strings.TrimSpace(clientid)
+    auth.Payload.Client_secret = strings.TrimSpace(secret)
+    auth.Payload.Supports = append(auth.Payload.Supports, "channels")
+    auth.Payload.Channels = append(auth.Payload.Channels, "grapevine")
+    auth.Payload.Version = "1.0.0"
+    auth.Payload.User_agent = "snowcrashnetwork"
+    authJSON, err := json.Marshal(auth)
+    if err != nil {
+      panic(err)
+    }
+    authJSONString := strings.ToLower(string(authJSON))
+    fmt.Println(authJSONString)
+
     //authSend := []byte(auth)
     for i := 0;i < 1;i++{
       //fmt.Println(authSend)
-      _, err = ws.Write([]byte(auth))
+      _, err = ws.Write([]byte(authJSONString))
       if err != nil {
           return err
       }
@@ -153,6 +182,8 @@ func grapeVine() {
   if err != nil {
     panic(err)
   }
+  fmt.Println(strings.TrimSpace(string(clientid)))
+  fmt.Println(strings.TrimSpace(string(secret)))
   client(string(clientid), string(secret), grapevine)
 }
 
