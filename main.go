@@ -190,8 +190,20 @@ func client(clientid string, secret string, url string, player chan string) erro
         heart.Event = "heartbeat"
         select {
         case playersLog := <- player:
-            playing = append(playing, playersLog)
-            heart.Payload.Players = append(heart.Payload.Players, playersLog)
+          enqueue := true
+          for i := 0;i < len(playing);i++ {
+            if playing[i] == playersLog {
+              enqueue = false
+            }
+          }
+          if enqueue {
+            if playersLog != "" {
+              playing = append(playing, playersLog)
+              heart.Payload.Players = append(heart.Payload.Players, playersLog)
+            }
+          }else {
+            heart.Payload.Players = playing
+          }
         default:
           if len(heart.Payload.Players) <= 0  && len(playing) >= 1 {
             heart.Payload.Players = playing
