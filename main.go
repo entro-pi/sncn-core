@@ -97,8 +97,35 @@ const (
 	chatStart = "\033[38:2:200:50:50m{{=\033[38:2:150:50:150m"
 	chatEnd = "\033[38:2:200:50:50m=}}"
 	end = "\033[0m"
+  grapevine = "tcp://grapevine.haus/socket"
 
 )
+
+func grapeVine() {
+  socket, err := zmq.NewSocket(zmq.REQ)
+  if err != nil {
+    panic(err)
+  }
+  socket.Connect(grapevine)
+  auth := string(
+    "{
+  "event": "authenticate",
+  "payload": {
+    "client_id": "client id",
+    "client_secret": "client secret",
+    "supports": ["channels"],
+    "channels": ["grapevine"],
+    "version": "1.0.0",
+    "user_agent": "snowcrash.network v 0.01"
+  }"
+}
+  )
+  _, err := socket.Send()
+
+  for {
+
+  }
+}
 
 func hash(value string) string {
   newVal := ""
