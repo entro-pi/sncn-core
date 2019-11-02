@@ -112,7 +112,7 @@ func grapeVine() {
   if err != nil {
     panic(err)
   }
-  err = response.Bind("tcp://*:80")
+  err = response.Connect("tcp://*:80")
   if err != nil {
     panic(err)
   }
