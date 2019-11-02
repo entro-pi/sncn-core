@@ -132,10 +132,10 @@ const (
 // client dials the WebSocket echo server at the given url.
 // It then sends it 5 different messages and echo's the server's
 // response to each.
-func client(clientid string, secret string, url string) error {
+func client(clientid string, secret string, url string, player chan string) error {
     _, cancel := context.WithTimeout(context.Background(), time.Minute)
     defer cancel()
-
+    //var playerList []string
     fmt.Println("IN CLIENT FUNC")
     ws, err := websocket.Dial(url, "", callback)
     if err != nil {
@@ -183,9 +183,18 @@ func client(clientid string, secret string, url string) error {
 //        }
 
       }else {
+
+
         var heart Heartbeat
         heart.Event = "heartbeat"
-        heart.Payload.Players = append(heart.Payload.Players, "Wallace")
+        select {
+        case playersLog := <- player:
+          if playersLog != "" {
+            heart.Payload.Players = append(heart.Payload.Players, playersLog)
+          }
+        default:
+          heart.Payload.Players = append(heart.Payload.Players, "none")
+        }
         heartJSON, err := json.Marshal(heart)
         if err != nil {
           panic(err)
@@ -196,6 +205,7 @@ func client(clientid string, secret string, url string) error {
         if err != nil {
             return err
         }
+        fmt.Println(heartJSONString)
         fmt.Println(string(heartbeat))
         if strings.Contains(string(heartbeat), "heartbeat") {
           fmt.Println("\033[38:2:200:0:0mBeep.\033[0m")
@@ -203,6 +213,7 @@ func client(clientid string, secret string, url string) error {
           if err != nil {
               return err
           }
+
           heartbeat = heartbeat[0:]
 
         }
@@ -214,7 +225,7 @@ func client(clientid string, secret string, url string) error {
     }
     return nil
 }
-func grapeVine() {
+func grapeVine(playerList chan string){
   clientFile, err := os.Open("client")
   if err != nil {
     panic(err)
@@ -230,7 +241,7 @@ func grapeVine() {
   }
   fmt.Println(strings.TrimSpace(string(clientid)))
   fmt.Println(strings.TrimSpace(string(secret)))
-  go client(string(clientid), string(secret), grapevine)
+  go client(string(clientid), string(secret), grapevine, playerList)
 }
 
 func hash(value string) string {
@@ -290,7 +301,7 @@ func initPlayer(name string, pass string) Player {
 
 }
 
-func loopInput(servepubKey string, in chan string) {
+func loopInput(servepubKey string, in chan string, players chan string) {
   fmt.Println("Core login procedure started")
 
   response, err := zmq.NewSocket(zmq.REP)
@@ -303,6 +314,7 @@ func loopInput(servepubKey string, in chan string) {
   if err != nil {
     panic(err)
   }
+  var playerList []string
   for {
     fmt.Println("IN LOOP")
     request, err := response.Recv(0)
@@ -342,11 +354,13 @@ func loopInput(servepubKey string, in chan string) {
         if err != nil {
           panic(err)
         }
-
+        fmt.Println(play.Name+"LOGGED IN")
+        playerList = append(playerList, play.Name)
         _, err = response.SendBytes(playBytes, 0)
         if err != nil {
           panic(err)
         }
+        players <- play.Name
     }else if strings.Contains(request, "+=+") {
       message := strings.Split(request, "+=+")[1]
       playerName := strings.Split(request, "+=+")[0]
@@ -382,12 +396,13 @@ func main() {
     in := make(chan string)
     var play Player
     var populated []Space
-    grapeVine()
+    playerList := make(chan string)
+    grapeVine(playerList)
     clientkey, _, err := zmq.NewCurveKeypair()
     if err != nil {
       panic(err)
     }
-    go loopInput(clientkey, in)
+    go loopInput(clientkey, in, playerList)
     for {
       value := <-in
       if strings.HasPrefix(value, "init world:") {
