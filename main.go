@@ -177,6 +177,8 @@ func loopInput(servepubKey string, in chan string) {
     in <- request
     if strings.Contains(request, ":"){
       fmt.Println(strings.Split(request, ":")[0]+"AUTHINFO")
+    }else if strings.Contains(request, "+=+") {
+      fmt.Println(strings.Split(request, "+=+")[0]+"CHATMSGS")
     }else {
       fmt.Println(request)
     }
