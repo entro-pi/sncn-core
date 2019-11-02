@@ -299,7 +299,7 @@ func main() {
     var populated []Space
     fmt.Println(hash("bad"))
     fmt.Println(hash("bad"))
-
+    grapeVine()
     clientkey, _, err := zmq.NewCurveKeypair()
     if err != nil {
       panic(err)
