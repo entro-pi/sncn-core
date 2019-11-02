@@ -146,7 +146,7 @@ func initPlayer(name string, pass string) Player {
     panic(err)
   }
   collection := client.Database("pfiles").Collection("Players")
-  _, err = collection.InsertOne(context.Background(), playBSON)
+  _, err = collection.InsertOne(context.Background(), bson.M{playBSON})
   if err != nil {
     panic(err)
   }
