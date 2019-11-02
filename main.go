@@ -112,7 +112,7 @@ func grapeVine() {
   if err != nil {
     panic(err)
   }
-  err = response.Connect("tcp://*:80")
+  err = response.Connect("tcp://*:7787")
   if err != nil {
     panic(err)
   }
@@ -297,7 +297,7 @@ func main() {
     in := make(chan string)
     var play Player
     var populated []Space
-//    grapeVine()
+    grapeVine()
     clientkey, _, err := zmq.NewCurveKeypair()
     if err != nil {
       panic(err)
