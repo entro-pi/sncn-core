@@ -297,9 +297,7 @@ func main() {
     in := make(chan string)
     var play Player
     var populated []Space
-    fmt.Println(hash("bad"))
-    fmt.Println(hash("bad"))
-    grapeVine()
+//    grapeVine()
     clientkey, _, err := zmq.NewCurveKeypair()
     if err != nil {
       panic(err)
