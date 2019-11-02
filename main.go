@@ -125,7 +125,7 @@ func lookupPlayer(pass string) Player {
   }
   err = result.Decode(&player)
   if err != nil {
-    panic(err)
+    fmt.Println("\033[38:2:150:0:150mPlayerfile requested was not found\033[0m")
   }
   return player
 
