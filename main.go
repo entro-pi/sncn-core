@@ -261,12 +261,19 @@ func client(broadcast []Broadcast, clientid string, secret string, url string, p
               //player should be assigned to this
               _ = strings.Split(playersLog, "||UWU||")[0]
               var Send SendBroadcast
+              var Save Broadcast
+              Save.Event = "channels/send"
               Send.Event = "channels/send"
+              Save.Payload.Channel = channel
               Send.Payload.Channel = channel
               Send.Ref = UIDMaker()
+              Save.Ref = Send.Ref
               Send.Payload.Name = playName
+              Save.Payload.Name = playName
               Send.Payload.Message = message
+              Save.Payload.Message = message
               SendJSON, err := json.Marshal(Send)
+              initGrape(Save)
               if err != nil {
                 panic(err)
               }
@@ -277,6 +284,11 @@ func client(broadcast []Broadcast, clientid string, secret string, url string, p
                   return err
               }
           continue
+          }
+          if strings.Contains(playersLog, "=+=") {
+            var broadcastNow Broadcast
+              broadcastLine <- broadcastNow
+              continue
           }
           if strings.Contains(playersLog, "-|-") {
             fmt.Println("\033[38:2:255:0:0mTriggered unsubscribe\033[0m")
@@ -371,8 +383,10 @@ func client(broadcast []Broadcast, clientid string, secret string, url string, p
           if err != nil {
             fmt.Println(err)
           }
-          broadcastLine <- broadcastNow
           broadcast = append(broadcast, broadcastNow)
+          broadcastLine <- broadcastNow
+//          player <- fmt.Sprint("=+=")
+
           fmt.Println(broadcastNow.Payload.Name+"@"+broadcastNow.Payload.Game+"\033[38:2:0:150:150m[["+broadcastNow.Payload.Message+"]]\033[0m")
         }
 
@@ -437,6 +451,55 @@ func lookupPlayer(pass string) Player {
   return player
 
 }
+func getGrapes(channelName string) []Broadcast {
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+  if err != nil {
+    panic(err)
+  }
+  ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+  err = client.Connect(ctx)
+  if err != nil {
+    panic(err)
+  }
+
+  collection := client.Database("broadcasts").Collection("snowcrash")
+  curs, err := collection.Find(context.Background(), bson.M{})
+  if err != nil {
+    panic(err)
+  }
+  var broadContainer []Broadcast
+  for curs.Next(context.Background()) {
+    var broad Broadcast
+    err = curs.Decode(&broad)
+    if err != nil {
+      panic(err)
+    }
+    broadContainer = append(broadContainer, broad)
+  }
+
+  return broadContainer
+
+}
+func initGrape(bcast Broadcast) Broadcast {
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+  if err != nil {
+    panic(err)
+  }
+  ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+  err = client.Connect(ctx)
+  if err != nil {
+    panic(err)
+  }
+  filter :=  bson.M{}
+  update := bson.M{"$set":bson.M{"event":bcast.Event,"ref":bcast.Ref,"payload":bson.M{"channel":bcast.Payload.Channel, "message":bcast.Payload.Message,"game":bcast.Payload.Game,"name":bcast.Payload.Name}}}
+  collection := client.Database("broadcasts").Collection("snowcrash")
+  _, err = collection.UpdateOne(context.Background(),filter, update, options.Update().SetUpsert(true))
+  if err != nil {
+    panic(err)
+  }
+  return bcast
+
+}
 func initPlayer(name string, pass string) Player {
   client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
   if err != nil {
@@ -488,12 +551,12 @@ func loopInput(broadcast []Broadcast, in chan string, players chan string, vineO
       }
     case broadSide := <- broadcastLine:
       fmt.Println("Triggered broadSideLine")
-      broadcast = append(broadcast, broadSide)
-      response.Recv(0)
+      broadcast = getGrapes(broadSide.Payload.Game)
       broadShip, err := json.Marshal(broadcast)
       if err != nil {
         panic(err)
       }
+      response.Recv(0)
       _, err = response.SendBytes(broadShip, 0)
       if err != nil {
         panic(err)
@@ -505,12 +568,6 @@ func loopInput(broadcast []Broadcast, in chan string, players chan string, vineO
     request, err := response.Recv(0)
     if err != nil {
       panic(err)
-    }
-    if strings.Contains(string(request), "channels/broadcast") {
-      _, err := response.Send(request, 0)
-      if err != nil {
-        panic(err)
-      }
     }
 
 
@@ -599,10 +656,7 @@ func loopInput(broadcast []Broadcast, in chan string, players chan string, vineO
   //      play = lookupPlayer(pass)
 //        goTo(dest int, play Player, populated []Space)
       }
-    }else if strings.Contains(request, "|GETCHAT|") {
-      fmt.Println("Getting all broadsides for "+strings.Split(request, "|GETCHAT|")[0])
-
-      }else {
+    }else {
 
   //    in <- request
       _, err := response.Send("INVALID REQUEST", 0)
