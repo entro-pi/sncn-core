@@ -20,6 +20,29 @@ import (
 )
 
 
+type SendBPayload struct {
+  Channel string
+  Name string
+  Message string
+}
+
+type SendBroadcast struct {
+  Event string
+  Ref string
+  Payload SendBPayload
+}
+
+type BroadcastPayload struct {
+  Channel string
+  Message string
+  Game string
+  Name string
+}
+type Broadcast struct {
+    Event string
+    Ref string
+    Payload BroadcastPayload
+}
 type Descriptions struct {
 	BATTLESPAM int
 	ROOMDESC int
@@ -142,7 +165,7 @@ const (
 // client dials the WebSocket echo server at the given url.
 // It then sends it 5 different messages and echo's the server's
 // response to each.
-func client(clientid string, secret string, url string, player chan string, vineOn chan bool) error {
+func client(broadcast []Broadcast, clientid string, secret string, url string, player chan string, vineOn chan bool, broadcastLine chan Broadcast) error {
     _, cancel := context.WithTimeout(context.Background(), time.Minute)
     defer cancel()
     vineOn <- true
@@ -225,6 +248,31 @@ func client(clientid string, secret string, url string, player chan string, vine
               ChannelSubJSONToSend := strings.ToLower(string(ChannelSubJSON))
               fmt.Println("\033[38:2:200:0:0mNEW SUBSCRIPTION.\033[0m")
               _, err = ws.Write([]byte(ChannelSubJSONToSend))
+              if err != nil {
+                  return err
+              }
+          continue
+          }
+          if strings.Contains(playersLog, "||UWU||") {
+            fmt.Println("\033[38:2:0:200:0mBroadcast Send\033[0m")
+              channel := strings.Split(playersLog, "||UWU||")[1]
+              playName := strings.Split(playersLog, "||UWU||")[0]
+              message := strings.Split(playersLog, "||}}{{||")[1]
+              //player should be assigned to this
+              _ = strings.Split(playersLog, "||UWU||")[0]
+              var Send SendBroadcast
+              Send.Event = "channels/send"
+              Send.Payload.Channel = channel
+              Send.Ref = UIDMaker()
+              Send.Payload.Name = playName
+              Send.Payload.Message = message
+              SendJSON, err := json.Marshal(Send)
+              if err != nil {
+                panic(err)
+              }
+              SendJSONTo := strings.ToLower(string(SendJSON))
+              fmt.Println("\033[38:2:0:200:0mNEW BROADSIDED BROADCAST.\033[0m")
+              _, err = ws.Write([]byte(SendJSONTo))
               if err != nil {
                   return err
               }
@@ -314,6 +362,19 @@ func client(clientid string, secret string, url string, player chan string, vine
               return err
           }
         }
+        if strings.Contains(string(heartbeat), "channels/broadcast") {
+          fmt.Println("\033[38:2:0:150:150m[[Message]]\033[0m")
+          var broadcastNow Broadcast
+          newBroad := strings.Trim(string(heartbeat), "\x00")
+
+          err = json.Unmarshal([]byte(newBroad), &broadcastNow)
+          if err != nil {
+            fmt.Println(err)
+          }
+          broadcastLine <- broadcastNow
+          broadcast = append(broadcast, broadcastNow)
+          fmt.Println(broadcastNow.Payload.Name+"@"+broadcastNow.Payload.Game+"\033[38:2:0:150:150m[["+broadcastNow.Payload.Message+"]]\033[0m")
+        }
 
 
 
@@ -324,7 +385,7 @@ func client(clientid string, secret string, url string, player chan string, vine
     return nil
 }
 
-func grapeVine(playerList chan string, vineOn chan bool){
+func grapeVine(broadcast []Broadcast, playerList chan string, vineOn chan bool, broadcastLine chan Broadcast){
   clientFile, err := os.Open("client")
   if err != nil {
     panic(err)
@@ -340,7 +401,7 @@ func grapeVine(playerList chan string, vineOn chan bool){
   }
   fmt.Println(strings.TrimSpace(string(clientid)))
   fmt.Println(strings.TrimSpace(string(secret)))
-  go client(string(clientid), string(secret), grapevine, playerList, vineOn)
+  go client(broadcast, string(clientid), string(secret), grapevine, playerList, vineOn, broadcastLine)
 }
 
 func hash(value string) string {
@@ -400,7 +461,7 @@ func initPlayer(name string, pass string) Player {
 
 }
 
-func loopInput(servepubKey string, in chan string, players chan string, vineOn chan bool) {
+func loopInput(broadcast []Broadcast, in chan string, players chan string, vineOn chan bool, broadcastLine chan Broadcast) {
   fmt.Println("Core login procedure started")
 
   response, err := zmq.NewSocket(zmq.REP)
@@ -422,8 +483,20 @@ func loopInput(servepubKey string, in chan string, players chan string, vineOn c
       }
       if isVineOn == false {
         fmt.Println("Grapevine \033[38:2:200:0:0mInactive\033[0m")
-        grapeVine(players, vineOn)
+        grapeVine(broadcast, players, vineOn, broadcastLine)
         time.Sleep(15*time.Second)
+      }
+    case broadSide := <- broadcastLine:
+      fmt.Println("Triggered broadSideLine")
+      broadcast = append(broadcast, broadSide)
+      response.Recv(0)
+      broadShip, err := json.Marshal(broadcast)
+      if err != nil {
+        panic(err)
+      }
+      _, err = response.SendBytes(broadShip, 0)
+      if err != nil {
+        panic(err)
       }
     default:
       fmt.Println("Grapevine Capable")
@@ -433,6 +506,15 @@ func loopInput(servepubKey string, in chan string, players chan string, vineOn c
     if err != nil {
       panic(err)
     }
+    if strings.Contains(string(request), "channels/broadcast") {
+      _, err := response.Send(request, 0)
+      if err != nil {
+        panic(err)
+      }
+    }
+
+
+
     var play Player
     in <- request
     if strings.Contains(request, ":"){
@@ -456,7 +538,10 @@ func loopInput(servepubKey string, in chan string, players chan string, vineOn c
       fmt.Println("Starting the grapeclient")
       players <- request
     }
-
+    if strings.Contains(request, "||UWU||") {
+      fmt.Println("GRAPE BROADSIDE")
+      players <- request
+    }
     if strings.Contains(request, ":-:") {
         userPass := strings.Split(request, ":-:")
         name, pass := userPass[0], userPass[1]
@@ -514,7 +599,10 @@ func loopInput(servepubKey string, in chan string, players chan string, vineOn c
   //      play = lookupPlayer(pass)
 //        goTo(dest int, play Player, populated []Space)
       }
-    }else {
+    }else if strings.Contains(request, "|GETCHAT|") {
+      fmt.Println("Getting all broadsides for "+strings.Split(request, "|GETCHAT|")[0])
+
+      }else {
 
   //    in <- request
       _, err := response.Send("INVALID REQUEST", 0)
@@ -528,17 +616,16 @@ func loopInput(servepubKey string, in chan string, players chan string, vineOn c
 }
 
 func main() {
+    broadcast := make([]Broadcast, 1)
+    broadcastLine := make(chan Broadcast)
     vineOn := make(chan bool)
     in := make(chan string)
     var play Player
     var populated []Space
     playerList := make(chan string)
-    grapeVine(playerList, vineOn)
-    clientkey, _, err := zmq.NewCurveKeypair()
-    if err != nil {
-      panic(err)
-    }
-    go loopInput(clientkey, in, playerList, vineOn)
+    grapeVine(broadcast, playerList, vineOn, broadcastLine)
+
+    go loopInput(broadcast, in, playerList, vineOn, broadcastLine)
     for {
       value := <-in
       if strings.HasPrefix(value, "init world:") {
