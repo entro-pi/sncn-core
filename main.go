@@ -16,7 +16,6 @@ import (
 //  "github.com/gorilla/websocket"
   "golang.org/x/net/websocket"
   "encoding/json"
-
 )
 
 
@@ -132,9 +131,10 @@ const (
 // client dials the WebSocket echo server at the given url.
 // It then sends it 5 different messages and echo's the server's
 // response to each.
-func client(clientid string, secret string, url string, player chan string) error {
+func client(clientid string, secret string, url string, player chan string, vineOn chan bool) error {
     _, cancel := context.WithTimeout(context.Background(), time.Minute)
     defer cancel()
+    vineOn <- true
     //var playerList []string
     fmt.Println("IN CLIENT FUNC")
     var playing []string
@@ -191,6 +191,13 @@ func client(clientid string, secret string, url string, player chan string) erro
         select {
         case playersLog := <- player:
           enqueue := true
+          logout := false
+          playerName := ""
+          if strings.Contains(playersLog, "LOGOUT||") {
+            playerName = strings.Split(playersLog, "||")[1]
+            logout = true
+            enqueue = false
+          }
           for i := 0;i < len(playing);i++ {
             if playing[i] == playersLog {
               enqueue = false
@@ -200,6 +207,13 @@ func client(clientid string, secret string, url string, player chan string) erro
             if playersLog != "" {
               playing = append(playing, playersLog)
               heart.Payload.Players = append(heart.Payload.Players, playersLog)
+            }
+          }else if logout {
+            for i := 0;i < len(playing);i++ {
+              if strings.ToLower(playing[i]) == strings.ToLower(playerName) {
+                playing[i] = "noone"
+              }
+              heart.Payload.Players = playing
             }
           }else {
             heart.Payload.Players = playing
@@ -241,9 +255,10 @@ func client(clientid string, secret string, url string, player chan string) erro
       }
 
     }
+    vineOn <- false
     return nil
 }
-func grapeVine(playerList chan string){
+func grapeVine(playerList chan string, vineOn chan bool){
   clientFile, err := os.Open("client")
   if err != nil {
     panic(err)
@@ -259,7 +274,7 @@ func grapeVine(playerList chan string){
   }
   fmt.Println(strings.TrimSpace(string(clientid)))
   fmt.Println(strings.TrimSpace(string(secret)))
-  go client(string(clientid), string(secret), grapevine, playerList)
+  go client(string(clientid), string(secret), grapevine, playerList, vineOn)
 }
 
 func hash(value string) string {
@@ -319,7 +334,7 @@ func initPlayer(name string, pass string) Player {
 
 }
 
-func loopInput(servepubKey string, in chan string, players chan string) {
+func loopInput(servepubKey string, in chan string, players chan string, vineOn chan bool) {
   fmt.Println("Core login procedure started")
 
   response, err := zmq.NewSocket(zmq.REP)
@@ -334,6 +349,17 @@ func loopInput(servepubKey string, in chan string, players chan string) {
   }
   var playerList []string
   for {
+    select {
+    case isVineOn := <- vineOn:
+      if isVineOn == true {
+        fmt.Println("Grapevine \033[38:2:0:200:0mActive\033[0m")
+      }
+      if isVineOn == false {
+        fmt.Println("Grapevine \033[38:2:200:0:0mInactive\033[0m")
+        grapeVine(players, vineOn)
+        time.Sleep(15*time.Second)
+      }
+    }
     fmt.Println("IN LOOP")
     request, err := response.Recv(0)
     if err != nil {
@@ -348,15 +374,7 @@ func loopInput(servepubKey string, in chan string, players chan string) {
     }else {
       fmt.Println(request)
     }
-
-    if strings.Split(string(request), ":")[0] == "REQUESTPUBKEY" {
-
-        _, err = response.Send(servepubKey, 0)
-
-        if err != nil {
-          panic(err)
-        }
-    }else if strings.Contains(request, ":-:") {
+    if strings.Contains(request, ":-:") {
         userPass := strings.Split(request, ":-:")
         name, pass := userPass[0], userPass[1]
         play = initPlayer(name, pass)
@@ -391,6 +409,26 @@ func loopInput(servepubKey string, in chan string, players chan string) {
         panic(err)
       }
 
+    }
+    request, err = response.Recv(0)
+    if err != nil {
+      panic(err)
+    }
+    if strings.Contains(request, "+==LOGOUT") {
+        playerToLogOut := strings.Split(request, "+==LOGOUT")[0]
+        for i := 0;i < len(playerList);i++ {
+          if strings.ToLower(playerList[i]) == strings.ToLower(playerToLogOut) {
+            fmt.Println(playerList[i]+ "LOGGED OUT")
+            response.Send("LOGGED "+playerList[i]+" OUT", 0)
+            playerList[i] = ""
+            players <- "LOGOUT||"+strings.ToLower(playerToLogOut)
+
+          }
+        }
+    }else if request == "+===shutdown===+" {
+
+      fmt.Println("\033[38:2:255:0:0mGOT "+request+" SIGNAL\033[0m")
+      os.Exit(1)
     }else if strings.Contains(request, ":go to=") {
       if len(strings.Split(request, ":")) == 2 {
     //    playerHash := strings.Split(request, ":")[0]
@@ -402,6 +440,7 @@ func loopInput(servepubKey string, in chan string, players chan string) {
 
   //    in <- request
       _, err := response.Send("INVALID REQUEST", 0)
+      fmt.Println("\033[38:2:150:0:150m"+request+"\033[0m")
       if err != nil {
         panic(err)
       }
@@ -411,16 +450,17 @@ func loopInput(servepubKey string, in chan string, players chan string) {
 }
 
 func main() {
+    vineOn := make(chan bool)
     in := make(chan string)
     var play Player
     var populated []Space
     playerList := make(chan string)
-    grapeVine(playerList)
+    grapeVine(playerList, vineOn)
     clientkey, _, err := zmq.NewCurveKeypair()
     if err != nil {
       panic(err)
     }
-    go loopInput(clientkey, in, playerList)
+    go loopInput(clientkey, in, playerList, vineOn)
     for {
       value := <-in
       if strings.HasPrefix(value, "init world:") {
@@ -447,10 +487,6 @@ func main() {
 
         fmt.Println("\033[38:2:0:250:0mAll tests passed and world has been initialzed\n\033[0mYou may now start with --login.")
 
-      }else if value == "shutdown" {
-
-        fmt.Println("\033[38:2:255:0:0mGOT "+value+" SIGNAL\033[0m")
-        os.Exit(1)
       }
     }
 }
