@@ -229,8 +229,7 @@ func client(broadcast []Broadcast, clientid string, secret string, url string, p
             playerName = strings.Split(playersLog, "||")[1]
             logout = true
             enqueue = false
-          }
-          if strings.Contains(playersLog, "+|+") {
+          }else if strings.Contains(playersLog, "+|+") {
             fmt.Println("\033[38:2:255:0:0mTriggered subscribe\033[0m")
               channelSub := strings.Split(playersLog, "+|+")[1]
 
@@ -252,8 +251,7 @@ func client(broadcast []Broadcast, clientid string, secret string, url string, p
                   return err
               }
           continue
-          }
-          if strings.Contains(playersLog, "||UWU||") {
+          }else if strings.Contains(playersLog, "||UWU||") {
             fmt.Println("\033[38:2:0:200:0mBroadcast Send\033[0m")
               channel := strings.Split(playersLog, "||UWU||")[1]
               playName := strings.Split(playersLog, "||UWU||")[0]
@@ -284,13 +282,11 @@ func client(broadcast []Broadcast, clientid string, secret string, url string, p
                   return err
               }
           continue
-          }
-          if strings.Contains(playersLog, "=+=") {
+          }else if strings.Contains(playersLog, "=+=") {
             var broadcastNow Broadcast
               broadcastLine <- broadcastNow
               continue
-          }
-          if strings.Contains(playersLog, "-|-") {
+          }else if strings.Contains(playersLog, "-|-") {
             fmt.Println("\033[38:2:255:0:0mTriggered unsubscribe\033[0m")
               channelSub := strings.Split(playersLog, "-|-")[1]
 
@@ -451,7 +447,7 @@ func lookupPlayer(pass string) Player {
   return player
 
 }
-func getGrapes(channelName string) []Broadcast {
+func getGrapes() []Broadcast {
   client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
   if err != nil {
     panic(err)
@@ -549,15 +545,10 @@ func loopInput(broadcast []Broadcast, in chan string, players chan string, vineO
         grapeVine(broadcast, players, vineOn, broadcastLine)
         time.Sleep(15*time.Second)
       }
-    case broadSide := <- broadcastLine:
+    case broadShip := <- broadcastLine:
       fmt.Println("Triggered broadSideLine")
-      broadcast = getGrapes(broadSide.Payload.Game)
-      broadShip, err := json.Marshal(broadcast)
-      if err != nil {
-        panic(err)
-      }
-      response.Recv(0)
-      _, err = response.SendBytes(broadShip, 0)
+      broadcast = getGrapes()
+      broadcast = append(broadcast, initGrape(broadShip))
       if err != nil {
         panic(err)
       }
@@ -656,6 +647,17 @@ func loopInput(broadcast []Broadcast, in chan string, players chan string, vineO
   //      play = lookupPlayer(pass)
 //        goTo(dest int, play Player, populated []Space)
       }
+    }else if strings.Contains(request, "=+=") {
+      broadcast = getGrapes()
+      out := ""
+      for i := 0;i < len(broadcast);i++ {
+        out += AssembleBroadside(broadcast[i], i)
+      }
+      _, err := response.Send(out, 0)
+      if err != nil {
+        panic(err)
+      }
+
     }else {
 
   //    in <- request
@@ -669,6 +671,55 @@ func loopInput(broadcast []Broadcast, in chan string, players chan string, vineO
 
 }
 
+func AssembleBroadside(broadside Broadcast, row int) (string) {
+	var cel string
+	inWord := broadside.Payload.Message
+	wor := ""
+	word := ""
+	words := ""
+	if len(inWord) > 68 {
+		return "DONE COMPOSTING"
+	}
+	if len(inWord) > 28 && len(inWord) > 54 {
+		wor += inWord[:28]
+		word += inWord[28:54]
+		words += inWord[54:]
+		for i := len(words); i <= 28; i++ {
+			words += " "
+		}
+	}
+	if len(inWord) > 28 && len(inWord) < 54 {
+		wor += inWord[:28]
+		word += inWord[28:]
+		for i := len(word); i <= 28; i++ {
+			word += " "
+		}
+		words = "                            "
+
+	}
+	if len(inWord) <= 28 {
+		wor = "                            "
+		word += ""
+		word += inWord
+		for i := len(word); i <= 28; i++ {
+			word += " "
+		}
+		words = "                            "
+	}
+
+	row++
+	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";180H\033[48;2;10;5;200m \033[48;2;10;10;20m", wor, "\033[48;2;10;5;200m \033[0m")
+	row++
+	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";180H\033[48;2;10;5;200m \033[48;2;10;10;20m", word, "\033[48;2;10;5;200m \033[0m")
+	row++
+	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";180H\033[48;2;10;5;200m \033[48;2;10;10;20m", words, "\033[48;2;10;5;200m \033[0m")
+	row++
+	namePlate := "                            "[len(broadside.Payload.Name+"@"+broadside.Payload.Game):]
+	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";180H\033[48;2;10;5;200m\033[38:2:50:0:50m@"+broadside.Payload.Name+"@"+broadside.Payload.Game+namePlate+"\033[48;2;10;5;200m \033[0m")
+
+	return cel
+	//	fmt.Println(cel)
+}
 func main() {
     broadcast := make([]Broadcast, 1)
     broadcastLine := make(chan Broadcast)
