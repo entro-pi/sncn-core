@@ -230,6 +230,29 @@ func client(clientid string, secret string, url string, player chan string, vine
               }
           continue
           }
+          if strings.Contains(playersLog, "-|-") {
+            fmt.Println("\033[38:2:255:0:0mTriggered unsubscribe\033[0m")
+              channelSub := strings.Split(playersLog, "-|-")[1]
+
+              //player should be assigned to this
+              _ = strings.Split(playersLog, "-|-")[0]
+              var ChannelSub GrapeMess
+              ChannelSub.Event = "channels/unsubscribe"
+              ChannelSub.Payload.Channel = channelSub
+              ChannelSub.Ref = UIDMaker()
+
+              ChannelSubJSON, err := json.Marshal(ChannelSub)
+              if err != nil {
+                panic(err)
+              }
+              ChannelSubJSONToSend := strings.ToLower(string(ChannelSubJSON))
+              fmt.Println("\033[38:2:200:0:0mNEW UNSUBSCRIPTION.\033[0m")
+              _, err = ws.Write([]byte(ChannelSubJSONToSend))
+              if err != nil {
+                  return err
+              }
+          continue
+          }
           for i := 0;i < len(playing);i++ {
             if playing[i] == playersLog {
               enqueue = false
@@ -429,7 +452,10 @@ func loopInput(servepubKey string, in chan string, players chan string, vineOn c
         players <- request
 
     }
-
+    if strings.Contains(request, "-|-"){
+      fmt.Println("Starting the grapeclient")
+      players <- request
+    }
 
     if strings.Contains(request, ":-:") {
         userPass := strings.Split(request, ":-:")
