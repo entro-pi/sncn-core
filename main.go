@@ -359,6 +359,8 @@ func loopInput(servepubKey string, in chan string, players chan string, vineOn c
         grapeVine(players, vineOn)
         time.Sleep(15*time.Second)
       }
+    default:
+      fmt.Println("Grapevine Capable")
     }
     fmt.Println("IN LOOP")
     request, err := response.Recv(0)
