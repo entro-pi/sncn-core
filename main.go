@@ -2,6 +2,7 @@ package main
 
 import (
   "time"
+  "math/rand"
   "strconv"
   "strings"
   "fmt"
@@ -66,6 +67,7 @@ type Player struct {
 	PlainCoreBoard string
 	CurrentRoom Space
   PlayerHash string
+  Channels []string
 
 	MaxRezz int
 	Rezz int
@@ -113,6 +115,15 @@ type Mobile struct {
 	Tech int
 	Aggro int
 	Align int
+}
+type GrapeMessPayload struct {
+  Channel string
+}
+
+type GrapeMess struct {
+  Event string
+  Payload GrapeMessPayload
+  Ref string
 }
 
 
@@ -184,8 +195,6 @@ func client(clientid string, secret string, url string, player chan string, vine
 //        }
 
       }else {
-
-
         var heart Heartbeat
         heart.Event = "heartbeat"
         select {
@@ -197,6 +206,29 @@ func client(clientid string, secret string, url string, player chan string, vine
             playerName = strings.Split(playersLog, "||")[1]
             logout = true
             enqueue = false
+          }
+          if strings.Contains(playersLog, "+|+") {
+            fmt.Println("\033[38:2:255:0:0mTriggered subscribe\033[0m")
+              channelSub := strings.Split(playersLog, "+|+")[1]
+
+              //player should be assigned to this
+              _ = strings.Split(playersLog, "+|+")[0]
+              var ChannelSub GrapeMess
+              ChannelSub.Event = "channels/subscribe"
+              ChannelSub.Payload.Channel = channelSub
+              ChannelSub.Ref = UIDMaker()
+
+              ChannelSubJSON, err := json.Marshal(ChannelSub)
+              if err != nil {
+                panic(err)
+              }
+              ChannelSubJSONToSend := strings.ToLower(string(ChannelSubJSON))
+              fmt.Println("\033[38:2:200:0:0mNEW SUBSCRIPTION.\033[0m")
+              _, err = ws.Write([]byte(ChannelSubJSONToSend))
+              if err != nil {
+                  return err
+              }
+          continue
           }
           for i := 0;i < len(playing);i++ {
             if playing[i] == playersLog {
@@ -215,7 +247,9 @@ func client(clientid string, secret string, url string, player chan string, vine
                 if len(playing) > 1 {
                   continue
                 }else if len(playing) == 1 {
-                  loggedOut = append(loggedOut, "none")
+                  if len(loggedOut) < 1 {
+                    loggedOut = append(loggedOut, "none")
+                  }
                   playing = loggedOut
                 }else {
                   loggedOut = append(loggedOut, playing[i])
@@ -256,8 +290,6 @@ func client(clientid string, secret string, url string, player chan string, vine
           if err != nil {
               return err
           }
-
-
         }
 
 
@@ -268,6 +300,7 @@ func client(clientid string, secret string, url string, player chan string, vine
     vineOn <- false
     return nil
 }
+
 func grapeVine(playerList chan string, vineOn chan bool){
   clientFile, err := os.Open("client")
   if err != nil {
@@ -386,6 +419,18 @@ func loopInput(servepubKey string, in chan string, players chan string, vineOn c
     }else {
       fmt.Println(request)
     }
+
+    if strings.Contains(request, "\"event\": \"restart\",") {
+      time.Sleep(15*time.Second)
+    }
+    if strings.Contains(request, "+|+") {
+
+        fmt.Println("Starting the grapeclient")
+        players <- request
+
+    }
+
+
     if strings.Contains(request, ":-:") {
         userPass := strings.Split(request, ":-:")
         name, pass := userPass[0], userPass[1]
@@ -421,12 +466,7 @@ func loopInput(servepubKey string, in chan string, players chan string, vineOn c
         panic(err)
       }
 
-    }
-    request, err = response.Recv(0)
-    if err != nil {
-      panic(err)
-    }
-    if strings.Contains(request, "+==LOGOUT") {
+    }else if strings.Contains(request, "+==LOGOUT") {
         playerToLogOut := strings.Split(request, "+==LOGOUT")[0]
         for i := 0;i < len(playerList);i++ {
           if strings.ToLower(playerList[i]) == strings.ToLower(playerToLogOut) {
@@ -501,4 +541,76 @@ func main() {
 
       }
     }
+}
+
+func UIDMaker() string {
+	hostname := "localhost"
+	username := "username"
+	//Inspired by 'Una (unascribed)'s bikeshed
+	rand.Seed(int64(time.Now().Nanosecond()))
+	adjectives := []string{"Accidental", "Allocated", "Asymptotic", "Background", "Binary",
+		"Bit", "Blast", "Blocked", "Bronze", "Captured", "Classic",
+		"Compact", "Compressed", "Concatenated", "Conventional",
+		"Cryptographic", "Decimal", "Decompressed", "Deflated",
+		"Defragmented", "Dirty", "Distinguished", "Dozenal", "Elegant",
+		"Encrypted", "Ender", "Enhanced", "Escaped", "Euclidean",
+		"Expanded", "Expansive", "Explosive", "Extended", "Extreme",
+		"Floppy", "Foreground", "Fragmented", "Garbage", "Giga", "Gold",
+		"Hard", "Helical", "Hexadecimal", "Higher", "Infinite", "Inflated",
+		"Intentional", "Interlaced", "Kilo", "Legacy", "Lower", "Magical",
+		"Mapped", "Mega", "Nonlinear", "Noodle", "Null", "Obvious", "Paged",
+		"Parity", "Platinum", "Primary", "Progressive", "Prompt",
+		"Protected", "Quick", "Real", "Recursive", "Replica", "Resident",
+		"Retried", "Root", "Secure", "Silver", "SolidState", "Super",
+		"Swap", "Switched", "Synergistic", "Tera", "Terminated", "Ternary",
+		"Traditional", "Unlimited", "Unreal", "Upper", "Userspace",
+		"Vector", "Virtual", "Web", "WoodGrain", "Written", "Zipped"}
+	nouns := []string{"AGP", "Algorithm", "Apparatus", "Array", "Bot", "Bus", "Capacitor",
+		"Card", "Chip", "Collection", "Command", "Connection", "Cookie",
+		"DLC", "DMA", "Daemon", "Data", "Database", "Density", "Desktop",
+		"Device", "Directory", "Disk", "Dongle", "Executable", "Expansion",
+		"Folder", "Glue", "Gremlin", "IRQ", "ISA", "Instruction",
+		"Interface", "Job", "Key", "List", "MBR", "Map", "Modem", "Monster",
+		"Numeral", "PCI", "Paradigm", "Plant", "Port", "Process",
+		"Protocol", "Registry", "Repository", "Rights", "Scanline", "Set",
+		"Slot", "Smoke", "Sweeper", "TSR", "Table", "Task", "Thread",
+		"Tracker", "USB", "Vector", "Window"}
+	uniquefier := ""
+
+	uniqe := ""
+	for i := 0; i < 2; i++ {
+		uniq := rand.Intn(15)
+		if uniq >= 10 {
+			switch uniq {
+			case 10:
+				uniqe = "A"
+			case 11:
+				uniqe = "B"
+			case 12:
+				uniqe = "C"
+			case 13:
+				uniqe = "D"
+			case 14:
+				uniqe = "E"
+			case 15:
+				uniqe = "F"
+			}
+
+			uniquefier += uniqe
+		} else {
+			uniquefier += fmt.Sprint(uniq)
+		}
+	}
+	ind := rand.Intn(len(adjectives))
+	indie := rand.Intn(len(adjectives))
+	if indie == ind {
+		indie = rand.Intn(len(adjectives))
+	}
+	thedog := rand.Intn(len(nouns))
+	uniqueFied := fmt.Sprint(uniquefier, adjectives[ind], adjectives[indie], nouns[thedog])
+
+	//fmt.Println(uniqueFied)
+
+	UID := fmt.Sprint(uniqueFied, hostname, username)
+	return UID
 }
