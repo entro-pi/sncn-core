@@ -486,13 +486,13 @@ func initGrape(bcast Broadcast) Broadcast {
   if err != nil {
     panic(err)
   }
-  filter :=  bson.M{}
-  update := bson.M{"$set":bson.M{"event":bcast.Event,"ref":bcast.Ref,"payload":bson.M{"channel":bcast.Payload.Channel, "message":bcast.Payload.Message,"game":bcast.Payload.Game,"name":bcast.Payload.Name}}}
+  update := bson.M{"event":bcast.Event,"ref":bcast.Ref,"payload":bson.M{"channel":bcast.Payload.Channel, "message":bcast.Payload.Message,"game":bcast.Payload.Game,"name":bcast.Payload.Name}}
   collection := client.Database("broadcasts").Collection("snowcrash")
-  _, err = collection.UpdateOne(context.Background(),filter, update, options.Update().SetUpsert(true))
+  _, err = collection.InsertOne(context.Background(), update)
   if err != nil {
     panic(err)
   }
+  fmt.Println("Upserted the broadcast")
   return bcast
 
 }
@@ -613,6 +613,13 @@ func loopInput(broadcast []Broadcast, in chan string, players chan string, vineO
           panic(err)
         }
         players <- play.Name
+    }else if strings.Contains(request, "+++") {
+      toSend := showChat()
+      fmt.Println("Sending chat list")
+      _, err = response.Send(toSend, 0)
+      if err != nil {
+        panic(err)
+      }
     }else if strings.Contains(request, "+=+") {
       message := strings.Split(request, "+=+")[1]
       playerName := strings.Split(request, "+=+")[0]
@@ -650,8 +657,12 @@ func loopInput(broadcast []Broadcast, in chan string, players chan string, vineO
     }else if strings.Contains(request, "=+=") {
       broadcast = getGrapes()
       out := ""
+      outVal := ""
+      row := 0
+      fmt.Println(broadcast)
       for i := 0;i < len(broadcast);i++ {
-        out += AssembleBroadside(broadcast[i], i)
+        outVal, row = AssembleBroadside(broadcast[i], row)
+        out += outVal
       }
       _, err := response.Send(out, 0)
       if err != nil {
@@ -671,14 +682,14 @@ func loopInput(broadcast []Broadcast, in chan string, players chan string, vineO
 
 }
 
-func AssembleBroadside(broadside Broadcast, row int) (string) {
+func AssembleBroadside(broadside Broadcast, row int) (string, int) {
 	var cel string
 	inWord := broadside.Payload.Message
 	wor := ""
 	word := ""
 	words := ""
 	if len(inWord) > 68 {
-		return "DONE COMPOSTING"
+		return "DONE COMPOSTING", 0
 	}
 	if len(inWord) > 28 && len(inWord) > 54 {
 		wor += inWord[:28]
@@ -708,16 +719,16 @@ func AssembleBroadside(broadside Broadcast, row int) (string) {
 	}
 
 	row++
-	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";180H\033[48;2;10;5;200m \033[48;2;10;10;20m", wor, "\033[48;2;10;5;200m \033[0m")
+	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";150H\033[48;2;10;5;200m \033[48;2;10;10;20m", wor, "\033[48;2;10;5;200m \033[0m")
 	row++
-	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";180H\033[48;2;10;5;200m \033[48;2;10;10;20m", word, "\033[48;2;10;5;200m \033[0m")
+	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";150H\033[48;2;10;5;200m \033[48;2;10;10;20m", word, "\033[48;2;10;5;200m \033[0m")
 	row++
-	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";180H\033[48;2;10;5;200m \033[48;2;10;10;20m", words, "\033[48;2;10;5;200m \033[0m")
+	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";150H\033[48;2;10;5;200m \033[48;2;10;10;20m", words, "\033[48;2;10;5;200m \033[0m")
 	row++
 	namePlate := "                            "[len(broadside.Payload.Name+"@"+broadside.Payload.Game):]
-	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";180H\033[48;2;10;5;200m@"+broadside.Payload.Name+"@"+broadside.Payload.Game+namePlate+"\033[48;2;10;5;200m \033[0m")
+	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";150H\033[48;2;10;5;200m@"+broadside.Payload.Name+"@"+broadside.Payload.Game+namePlate+"\033[48;2;10;5;200m \033[0m")
 
-	return cel
+	return cel, row
 	//	fmt.Println(cel)
 }
 func main() {
