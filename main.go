@@ -209,11 +209,21 @@ func client(clientid string, secret string, url string, player chan string, vine
               heart.Payload.Players = append(heart.Payload.Players, playersLog)
             }
           }else if logout {
+            var loggedOut []string
             for i := 0;i < len(playing);i++ {
               if strings.ToLower(playing[i]) == strings.ToLower(playerName) {
-                playing[i] = "noone"
+                if len(playing) > 1 {
+                  continue
+                }else if len(playing) == 1 {
+                  loggedOut = append(loggedOut, "none")
+                  playing = loggedOut
+                }else {
+                  loggedOut = append(loggedOut, playing[i])
+                }
+
               }
-              heart.Payload.Players = playing
+              heart.Payload.Players = loggedOut
+              logout = false
             }
           }else {
             heart.Payload.Players = playing
