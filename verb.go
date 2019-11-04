@@ -71,16 +71,15 @@ func AssembleComposeCel(chatMess Chat, row int) (string, int) {
 		}
 		words = "                            "
 	}
-	timeString := strings.Split(chatMess.Time.String(), " ")
 	row++
-	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";180H\033[48;2;10;255;20m \033[48;2;10;10;20m", wor, "\033[48;2;10;255;20m \033[0m")
+	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";205H\033[48;2;10;255;20m \033[48;2;10;10;20m", wor, "\033[48;2;10;255;20m \033[0m")
 	row++
-	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";180H\033[48;2;10;255;20m \033[48;2;10;10;20m", word, "\033[48;2;10;255;20m \033[0m"+timeString[1])
+	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";205H\033[48;2;10;255;20m \033[48;2;10;10;20m", word, "\033[48;2;10;255;20m \033[0m")
 	row++
-	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";180H\033[48;2;10;255;20m \033[48;2;10;10;20m", words, "\033[48;2;10;255;20m \033[0m"+timeString[0])
+	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";205H\033[48;2;10;255;20m \033[48;2;10;10;20m", words, "\033[48;2;10;255;20m \033[0m")
 	row++
 	namePlate := "                            "[len(chatMess.User):]
-	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";180H\033[48;2;10;255;20m\033[38:2:50:0:50m@"+chatMess.User+namePlate+"\033[48;2;10;255;20m \033[0m")
+	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";205H\033[48;2;10;255;20m\033[38:2:50:0:50m@"+chatMess.User+namePlate+"\033[48;2;10;255;20m \033[0m")
 
 	return cel, row
 	//	fmt.Println(cel)
