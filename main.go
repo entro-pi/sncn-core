@@ -327,7 +327,8 @@ func client(broadcast []Broadcast, clientid string, secret string, url string, p
                   continue
                 }else if len(playing) == 1 {
                   if len(loggedOut) < 1 {
-                    loggedOut = append(loggedOut, "none")
+                    emptyWho := make([]string, 0)
+                    loggedOut = emptyWho
                   }
                   playing = loggedOut
                 }else {
@@ -345,10 +346,8 @@ func client(broadcast []Broadcast, clientid string, secret string, url string, p
           if len(heart.Payload.Players) <= 0  && len(playing) >= 1 {
             heart.Payload.Players = playing
           }else if len(heart.Payload.Players) <= 0 {
-            heart.Payload.Players = append(heart.Payload.Players, "none")
-          }
-          if heart.Payload.Players[0] != "none" {
-            heart.Payload.Players = playing
+            emptyWho := make([]string, 0)
+            heart.Payload.Players = emptyWho
           }
         }
         heartJSON, err := json.Marshal(heart)
