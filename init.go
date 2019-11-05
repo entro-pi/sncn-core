@@ -45,6 +45,7 @@ func InitPlayer(name string, pass string) Player {
   play.Classes[0].Name = "wildling"
   var rip Skill
   rip.DamType = "slash"
+  rip.Name = "overcharge"
   rip.Level = 0
   rip.Usage = 'e'
   play.Classes[0].Skills = append(play.Classes[0].Skills, rip)

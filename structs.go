@@ -17,8 +17,12 @@ type Spell struct {
 	Level int
 	Consumed bool
 }
-
+type Fight struct {
+	Oppose []Mobile
+	Former []Player
+}
 type Skill struct {
+	Name string
 	DamType string
 	Level int
 	Usage rune
