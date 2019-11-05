@@ -388,7 +388,7 @@ func initPlayer(name string, pass string) Player {
 
 }
 
-func loopInput(broadcast []Broadcast, in chan string, players chan string, vineOn chan bool, broadcastLine chan Broadcast) {
+func loopInput(populated []Space, broadcast []Broadcast, in chan string, players chan string, vineOn chan bool, broadcastLine chan Broadcast) {
   fmt.Println("Core login procedure started")
 
   response, err := zmq.NewSocket(zmq.REP)
@@ -461,7 +461,10 @@ func loopInput(broadcast []Broadcast, in chan string, players chan string, vineO
     if strings.Contains(request, ":-:") {
         userPass := strings.Split(request, ":-:")
         name, pass := userPass[0], userPass[1]
-        play = initPlayer(name, pass)
+        play = InitPlayer(name, pass)
+        play.CurrentRoom = populated[0]
+        addPfile(play, pass)
+        savePfile(play)
         _, err = response.Send(play.PlayerHash, 0)
         if err != nil {
           panic(err)
@@ -604,17 +607,34 @@ func main() {
     broadcastLine := make(chan Broadcast)
     vineOn := make(chan bool)
     in := make(chan string)
-    var play Player
     var populated []Space
+    var wizinit bool
+    wizinit = false
     playerList := make(chan string)
+    populated = PopulateAreas()
     grapeVine(broadcast, playerList, vineOn, broadcastLine)
+    if len(os.Args) > 1 {
+      if len(os.Args) == 2 && os.Args[1] == "--wizinit" {
+        dorp := InitPlayer("dorp", "norp")
+        descString := "The absence of light is blinding.\nThree large telephone poles illuminate a small square."
 
-    go loopInput(broadcast, in, playerList, vineOn, broadcastLine)
+        InitZoneSpaces("5-15", "Midgaard", descString)
+        populated = PopulateAreas()
+        addPfile(dorp, "norp")
+        dorp.CurrentRoom = populated[0]
+        savePfile(dorp)
+        fmt.Println("dorp/norp")
+        wizinit = true
+      }
+    }
+    if !wizinit {
+      go loopInput(populated, broadcast, in, playerList, vineOn, broadcastLine)
+    }
     for {
-      value := <-in
-      if strings.HasPrefix(value, "init world:") {
-        playerName := strings.Split(value, "ld:")[1]
-        pass := strings.Split(value, "--")[1]
+      if !wizinit {
+        <- in
+      }
+        if len(os.Args) == 2 && os.Args[1] == "--wizinit" {
         descString := "The absence of light is blinding.\nThree large telephone poles illuminate a small square."
   			for len(strings.Split(descString, "\n")) < 8 {
   				descString += "\n"
@@ -626,16 +646,13 @@ func main() {
   			}
   			InitZoneSpaces("5-15", "Midgaard", descString)
   			populated = PopulateAreas()
-        play = InitPlayer(playerName, pass)
-        play = InitPlayer("dorp", "norp")
 
-  			addPfile(play)
   			createMobiles("Noodles")
         respond := fmt.Sprint("\033[38:2:0:250:0mInitialized "+strconv.Itoa(len(populated))+" rooms\033[0m")
         fmt.Printf(respond)
 
-        fmt.Println("\033[38:2:0:250:0mAll tests passed and world has been initialzed\n\033[0mYou may now start with --login.")
-
+        fmt.Println("\033[38:2:0:250:0mAll tests passed and world has been initialzed\n\033[0mYou may now start by running ./sncn-core with no arguments and logging in from a client\nUser:dorp\nPass:norp.")
+        os.Exit(1)
       }
     }
 }

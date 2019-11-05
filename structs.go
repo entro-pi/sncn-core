@@ -128,8 +128,16 @@ type Player struct {
 	CoreBoard string
 	PlainCoreBoard string
 	CurrentRoom Space
-  PlayerHash string
-  Channels []string
+	PlayerHash string
+	Classes []Class
+	Target string
+	TargetLong string
+	TarX int
+	TarY int
+	OldX int
+	OldY int
+	CPU string
+	Channels []string
 
 	MaxRezz int
 	Rezz int

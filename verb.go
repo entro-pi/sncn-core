@@ -369,7 +369,7 @@ func createMobiles(name string) {
 						"str": 1, "int": 1, "dex": 1, "wis": 1, "con":1, "cha":1, "challengedice":1 })
 }
 
-func addPfile(play Player) {
+func addPfile(play Player, pass string) {
 	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
 	if err != nil {
 		panic(err)
@@ -380,7 +380,7 @@ func addPfile(play Player) {
 		panic(err)
 	}
 	collection := client.Database("pfiles").Collection("Players")
-	_, err = collection.InsertOne(context.Background(), bson.M{"name":play.Name,"title":play.Title,"inventory":play.Inventory, "equipment":play.Equipment,
+	_, err = collection.InsertOne(context.Background(), bson.M{"playerhash": hash(pass),"name":play.Name,"title":play.Title,"inventory":play.Inventory, "equipment":play.Equipment,
 						"coreboard": play.CoreBoard, "str": play.Str, "int": play.Int, "dex": play.Dex, "wis": play.Wis, "con":play.Con, "cha":play.Cha })
 }
 func savePfile(play Player) {
@@ -395,5 +395,5 @@ func savePfile(play Player) {
 	}
 	collection := client.Database("pfiles").Collection("Players")
 	_, err = collection.UpdateOne(context.Background(), options.Update().SetUpsert(true), bson.M{"name":play.Name,"title":play.Title,"inventory":play.Inventory, "equipment":play.Equipment,
-						"coreboard": play.CoreBoard, "str": play.Str, "int": play.Int, "dex": play.Dex, "wis": play.Wis, "con":play.Con, "cha":play.Cha })
+						"coreboard": play.CoreBoard,"currentroom":play.CurrentRoom, "str": play.Str, "int": play.Int, "dex": play.Dex, "wis": play.Wis, "con":play.Con, "cha":play.Cha, "classes": play.Classes })
 }
