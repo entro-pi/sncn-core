@@ -13,6 +13,7 @@ type Class struct {
 
 type Spell struct {
 	TechUsage int
+	Usage rune
 	Level int
 	Consumed bool
 }

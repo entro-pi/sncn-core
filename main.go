@@ -364,29 +364,6 @@ func initGrape(bcast Broadcast) Broadcast {
   return bcast
 
 }
-func initPlayer(name string, pass string) Player {
-  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
-  if err != nil {
-    panic(err)
-  }
-  ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-  err = client.Connect(ctx)
-  if err != nil {
-    panic(err)
-  }
-  play := InitPlayer(name, pass)
-  playBSON, err := bson.Marshal(play)
-  if err != nil {
-    panic(err)
-  }
-  collection := client.Database("pfiles").Collection("Players")
-  _, err = collection.InsertOne(context.Background(), playBSON)
-  if err != nil {
-    panic(err)
-  }
-  return play
-
-}
 
 func loopInput(populated []Space, broadcast []Broadcast, in chan string, players chan string, vineOn chan bool, broadcastLine chan Broadcast) {
   fmt.Println("Core login procedure started")
@@ -465,7 +442,8 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
         play.CurrentRoom = populated[0]
         addPfile(play, pass)
         savePfile(play)
-        _, err = response.Send(play.PlayerHash, 0)
+        playBytes, err := bson.Marshal(play)
+        _, err = response.SendBytes(playBytes, 0)
         if err != nil {
           panic(err)
         }

@@ -381,7 +381,7 @@ func addPfile(play Player, pass string) {
 	}
 	collection := client.Database("pfiles").Collection("Players")
 	_, err = collection.InsertOne(context.Background(), bson.M{"playerhash": hash(pass),"name":play.Name,"title":play.Title,"inventory":play.Inventory, "equipment":play.Equipment,
-						"coreboard": play.CoreBoard, "str": play.Str, "int": play.Int, "dex": play.Dex, "wis": play.Wis, "con":play.Con, "cha":play.Cha })
+						"coreboard": play.CoreBoard, "str": play.Str, "int": play.Int, "dex": play.Dex, "wis": play.Wis, "con":play.Con, "cha":play.Cha, "classes": play.Classes })
 }
 func savePfile(play Player) {
 	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
