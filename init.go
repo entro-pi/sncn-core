@@ -32,7 +32,7 @@ func initDigRoom(digFrame [][]int, zoneVnums string, zoneName string, play Playe
 
 func InitPlayer(name string, pass string) Player {
 	var play Player
-  play.PlayerHash = hash(pass)
+  play.PlayerHash = hash(name+pass)
 	var inv []int
 	var equ []int
   var class Class

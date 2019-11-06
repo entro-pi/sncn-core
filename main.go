@@ -289,7 +289,7 @@ func hash(value string) string {
   }
   return newVal
 }
-func lookupPlayer(pass string) Player {
+func lookupPlayer(name string, pass string) Player {
   client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
   if err != nil {
     panic(err)
@@ -301,7 +301,8 @@ func lookupPlayer(pass string) Player {
   }
   var player Player
   collection := client.Database("pfiles").Collection("Players")
-  result  := collection.FindOne(context.Background(), bson.M{"playerhash": bson.M{"$eq":hash(pass)}})
+
+  result  := collection.FindOne(context.Background(), bson.M{"playerhash": bson.M{"$eq":hash(name+pass)}})
   if err != nil {
     panic(err)
   }
@@ -450,7 +451,8 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
     }else if strings.Contains(request, ":=:") {
         userPass := strings.Split(request, ":=:")
         pass := userPass[1]
-        play = lookupPlayer(pass)
+        name := userPass[0]
+        play = lookupPlayer(name, pass)
         playBytes, err := bson.Marshal(play)
         if err != nil {
           panic(err)
