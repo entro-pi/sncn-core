@@ -15,6 +15,7 @@ type Spell struct {
 	TechUsage int
 	Name string
 	Usage rune
+	Dam int
 	Level int
 	Consumed bool
 }

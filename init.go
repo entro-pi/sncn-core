@@ -45,14 +45,15 @@ func InitPlayer(name string, pass string) Player {
   play.Classes[0].Name = "wildling"
   var rip Skill
   rip.DamType = "slash"
-  rip.Name = "Overcharge"
-  rip.Level = 0
+  rip.Name = "overcharge"
+  rip.Level = 1
   rip.Usage = 'e'
   play.Classes[0].Skills = append(play.Classes[0].Skills, rip)
   var blast Spell
   blast.TechUsage = 2
-  blast.Name = "Blast"
+  blast.Name = "blast"
   blast.Level = 1
+  blast.Dam = 3
   blast.Consumed = false
   play.Classes[0].Spells = append(play.Classes[0].Spells, blast)
 
