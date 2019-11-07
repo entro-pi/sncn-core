@@ -379,6 +379,7 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
   if err != nil {
     panic(err)
   }
+  var broadcastContainer []Broadcast
   var playerList []string
   for {
     select {
@@ -406,7 +407,6 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
     if err != nil {
       panic(err)
     }
-
 
 
     var play Player
@@ -523,22 +523,35 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
 
     }else if strings.Contains(request, "--+--") {
       var bs Broadcast
+
       out := ""
       bs.Payload.Message = "Kaboom!"
       bs.Payload.Channel = "BS"
       bs.Payload.Name = strings.Split(request, "--+--")[0]
-      bs.Payload.Game = "snowcrash"
+      bs.Payload.Game = "snowcrash.network"
       for row := 1;row <= 20;row += 4 {
         for col := 1;col <= 143;col += 30 {
           broad := AssembleBroadside(bs, row, col)
           out += broad
+          broadcastContainer = append(broadcastContainer, bs)
         }
       }
       _, err := response.Send(out, 0)
       if err != nil {
         panic(err)
       }
-    }else {
+      }else if request == "--ok--" {
+        fmt.Println(string(request))
+        broadBytes, err := json.Marshal(broadcastContainer)
+        if err != nil {
+          panic(err)
+        }
+        _, err = response.SendBytes(broadBytes, 0)
+        if err != nil {
+          panic(err)
+        }
+        fmt.Println("Send ok")
+      }else {
 
   //    in <- request
       _, err := response.Send("INVALID REQUEST", 0)
