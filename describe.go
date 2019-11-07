@@ -170,14 +170,15 @@ func showChat() string {
 		if err != nil {
 			panic(err)
 		}
-		chatPos := fmt.Sprintf("\033["+strconv.Itoa(count+3)+";180H")
+//		chatPos := fmt.Sprintf("\033["+strconv.Itoa(count+3)+";180H")
 		count++
 		if row >= 51 {
 			row = 0
 		}
-    chatMess.Message += chatPos
-		message, position := AssembleComposeCel(chatMess, row)
-		row = position
+  //  chatMess.Message += chatPos
+    col := 174
+		message := AssembleComposeCel(chatMess, row, col)
+		row += 4
     messages = append(messages, message)
 //		fmt.Printf(message)
 //		fmt.Printf(chatStart)

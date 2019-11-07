@@ -512,7 +512,8 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
       row := 0
       fmt.Println(broadcast)
       for i := 0;i < len(broadcast);i++ {
-        outVal, row = AssembleBroadside(broadcast[i], row)
+        outVal = AssembleBroadside(broadcast[i], row, 207)
+        row += 4
         out += outVal
       }
       _, err := response.Send(out, 0)
@@ -520,6 +521,23 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
         panic(err)
       }
 
+    }else if strings.Contains(request, "--+--") {
+      var bs Broadcast
+      out := ""
+      bs.Payload.Message = "Kaboom!"
+      bs.Payload.Channel = "BS"
+      bs.Payload.Name = strings.Split(request, "--+--")[0]
+      bs.Payload.Game = "snowcrash"
+      for row := 1;row <= 20;row += 4 {
+        for col := 1;col <= 143;col += 30 {
+          broad := AssembleBroadside(bs, row, col)
+          out += broad
+        }
+      }
+      _, err := response.Send(out, 0)
+      if err != nil {
+        panic(err)
+      }
     }else {
 
   //    in <- request
@@ -533,14 +551,15 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
 
 }
 
-func AssembleBroadside(broadside Broadcast, row int) (string, int) {
+func AssembleBroadside(broadside Broadcast, row int, col int) (string) {
 	var cel string
+	colString := strconv.Itoa(col)
 	inWord := broadside.Payload.Message
 	wor := ""
 	word := ""
 	words := ""
 	if len(inWord) > 68 {
-		return "DONE COMPOSTING", 0
+		return "DONE COMPOSTING"
 	}
 	if len(inWord) > 28 && len(inWord) > 54 {
 		wor += inWord[:28]
@@ -570,16 +589,19 @@ func AssembleBroadside(broadside Broadcast, row int) (string, int) {
 	}
 
 	row++
-	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";175H\033[48;2;20;255;50m \033[48;2;10;10;20m", wor, "\033[48;2;20;255;50m \033[0m")
+	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;20;255;50m \033[48;2;10;10;20m", wor, "\033[48;2;20;255;50m \033[0m")
 	row++
-	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";175H\033[48;2;20;255;50m \033[48;2;10;10;20m", word, "\033[48;2;20;255;50m \033[0m")
+	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;20;255;50m \033[48;2;10;10;20m", word, "\033[48;2;20;255;50m \033[0m")
 	row++
-	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";175H\033[48;2;20;255;50m \033[48;2;10;10;20m", words, "\033[48;2;20;255;50m \033[0m")
+	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;20;255;50m \033[48;2;10;10;20m", words, "\033[48;2;20;255;50m \033[0m")
 	row++
+	if broadside.Payload.Game == "" {
+		broadside.Payload.Game = "snowcrash"
+	}
 	namePlate := "                            "[len(broadside.Payload.Name+"@"+broadside.Payload.Game):]
-	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";175H\033[48;2;20;255;50m\033[38;2;10;10;20m@"+broadside.Payload.Name+"@"+broadside.Payload.Game+namePlate+"\033[48;2;20;255;50m \033[0m")
+	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;20;255;50m@"+broadside.Payload.Name+"@"+broadside.Payload.Game+namePlate+"\033[48;2;20;255;50m \033[0m")
 
-	return cel, row
+	return cel
 	//	fmt.Println(cel)
 }
 func main() {

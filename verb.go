@@ -36,14 +36,15 @@ func digDug(pos []int, play Player, digFrame [][]int, digNums string, digZone st
 }
 
 
-func AssembleComposeCel(chatMess Chat, row int) (string, int) {
+func AssembleComposeCel(chatMess Chat, row int, col int) (string) {
 	var cel string
+	colString := strconv.Itoa(col)
 	inWord := chatMess.Message
 	wor := ""
 	word := ""
 	words := ""
 	if len(inWord) > 68 {
-		return "DONE COMPOSTING", 0
+		return "DONE COMPOSTING"
 	}
 	if len(inWord) > 28 && len(inWord) > 54 {
 		wor += inWord[:28]
@@ -71,17 +72,21 @@ func AssembleComposeCel(chatMess Chat, row int) (string, int) {
 		}
 		words = "                            "
 	}
-	row++
-	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";205H\033[48;2;10;255;20m \033[48;2;10;10;20m", wor, "\033[48;2;10;255;20m \033[0m")
-	row++
-	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";205H\033[48;2;10;255;20m \033[48;2;10;10;20m", word, "\033[48;2;10;255;20m \033[0m")
-	row++
-	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";205H\033[48;2;10;255;20m \033[48;2;10;10;20m", words, "\033[48;2;10;255;20m \033[0m")
-	row++
-	namePlate := "                            "[len(chatMess.User):]
-	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";205H\033[48;2;10;255;20m\033[38:2:50:0:50m@"+chatMess.User+namePlate+"\033[48;2;10;255;20m \033[0m")
 
-	return cel, row
+	row++
+	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;20;255;50m \033[48;2;10;10;20m", wor, "\033[48;2;20;255;50m \033[0m")
+	row++
+	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;20;255;50m \033[48;2;10;10;20m", word, "\033[48;2;20;255;50m \033[0m")
+	row++
+	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;20;255;50m \033[48;2;10;10;20m", words, "\033[48;2;20;255;50m \033[0m")
+	row++
+	if chatMess.User == "" {
+		chatMess.User = "snowcrash"
+	}
+	namePlate := "                           @"[len(chatMess.User):]
+	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;20;255;50m@"+chatMess.User+namePlate+"\033[48;2;20;255;50m \033[0m")
+
+	return cel
 	//	fmt.Println(cel)
 }
 
