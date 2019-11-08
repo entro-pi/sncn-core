@@ -67,6 +67,7 @@ type BroadcastPayload struct {
   Name string
 	Row int
 	Col int
+	Selected bool
 }
 type Broadcast struct {
     Event string

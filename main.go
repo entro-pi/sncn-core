@@ -529,6 +529,7 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
       bs.Payload.Channel = "BS"
       bs.Payload.Name = strings.Split(request, "--+--")[0]
       bs.Payload.Game = "snowcrash.network"
+      bs.Payload.Selected = false
       for row := 1;row <= 20;row += 4 {
         for col := 53;col <= 143;col += 30 {
 
