@@ -530,8 +530,11 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
       bs.Payload.Name = strings.Split(request, "--+--")[0]
       bs.Payload.Game = "snowcrash.network"
       for row := 1;row <= 20;row += 4 {
-        for col := 1;col <= 143;col += 30 {
+        for col := 53;col <= 143;col += 30 {
+
           broad := AssembleBroadside(bs, row, col)
+          bs.Payload.Row = row
+          bs.Payload.Col = col
           out += broad
           broadcastContainer = append(broadcastContainer, bs)
         }

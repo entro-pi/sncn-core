@@ -69,6 +69,8 @@ type BroadcastPayload struct {
   Message string
   Game string
   Name string
+	Row int
+	Col int
 }
 type Broadcast struct {
     Event string
