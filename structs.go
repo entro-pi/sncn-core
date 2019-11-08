@@ -19,10 +19,6 @@ type Spell struct {
 	Level int
 	Consumed bool
 }
-type Fight struct {
-	Oppose []Mobile
-	Former []Player
-}
 type Skill struct {
 	Name string
 	DamType string
@@ -129,6 +125,18 @@ type Exit struct {
 	Down int
 }
 
+
+type Object struct {
+	Name string
+	LongName string
+	Vnum int
+	Zone string
+	Owner Player
+	Value int
+	X int
+	Y int
+	Owned bool
+}
 type Player struct {
 	Name string
 	Title string
@@ -146,11 +154,16 @@ type Player struct {
 	OldX int
 	OldY int
 	CPU string
+	CoreShow bool
 	Channels []string
+	Battling bool
 
 	MaxRezz int
 	Rezz int
 	Tech int
+	Fights Fight
+	Won int
+	Found int
 
 	Str int
 	Int int
@@ -158,6 +171,12 @@ type Player struct {
 	Wis int
 	Con int
 	Cha int
+}
+
+type Fight struct {
+	Oppose []Mobile
+	Former []Player
+	Treasure []Object
 }
 type Payload struct {
   Client_id string
@@ -194,6 +213,9 @@ type Mobile struct {
 	Tech int
 	Aggro int
 	Align int
+	X int
+	Y int
+	Char string
 }
 type GrapeMessPayload struct {
   Channel string
