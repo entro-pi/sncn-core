@@ -158,6 +158,8 @@ type Player struct {
 	Channels []string
 	Battling bool
 	Profile string
+	Slain int
+	Hoarded int
 
 	MaxRezz int
 	Rezz int
