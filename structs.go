@@ -157,6 +157,7 @@ type Player struct {
 	CoreShow bool
 	Channels []string
 	Battling bool
+	Profile string
 
 	MaxRezz int
 	Rezz int
