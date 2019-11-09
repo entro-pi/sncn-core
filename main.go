@@ -589,7 +589,7 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
       bs.Payload.Game = "snowcrash.network"
       bs.Payload.Selected = false
       bs.Payload.BigMessage = "==oh\n==hai\n=====dere\n==="
-      for row := 1;row <= 20;row += 4 {
+      for row := 0;row <= 20;row += 4 {
         for col := 53;col <= 143;col += 30 {
 
           broad := AssembleBroadside(bs, row, col)
@@ -708,7 +708,7 @@ func AssembleBroadside(broadside Broadcast, row int, col int) (string) {
   	if broadside.Payload.Selected && len(strings.Split(broadside.Payload.BigMessage, "\n")) > 1 {
   		bigSplit := strings.Split(broadside.Payload.BigMessage, "\n")
   		for i := 0;i < len(bigSplit);i++ {
-  			cel += fmt.Sprint("\033["+strconv.Itoa(22+broadRow)+";53H\033[48:2:200:0:200m \033[0m"+bigSplit[broadRow]+"\033[48:2:200:0:200m \033[0m")
+  			cel += fmt.Sprint("\033["+strconv.Itoa(25+broadRow)+";53H\033[48:2:200:0:200m \033[0m"+bigSplit[broadRow]+"\033[48:2:200:0:200m \033[0m")
   			broadRow++
   		}
   	}
