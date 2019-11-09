@@ -530,16 +530,14 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
 
     }else if strings.Contains(request, "++SAVE++"){
       if len(strings.Split(request, "++SAVE++")) == 2 {
-        hash := strings.Split(request, "++SAVE++")[1]
-        updatePlayerSlain(hash)
-        fmt.Println("Saved")
+        fmt.Println("Saving")
         response.Send("SAVING", 0)
         playHolder, err := response.RecvBytes(0)
         err = bson.Unmarshal(playHolder, &play)
         if err != nil {
           panic(err)
         }
-        fmt.Println("\033[38:2:200:0:200m",play,"\033[0m")
+        //fmt.Println("\033[38:2:200:0:200m",play,"\033[0m")
         savePfile(play)
         response.Send("SAVED", 0)
       }
