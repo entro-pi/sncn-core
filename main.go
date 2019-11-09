@@ -425,7 +425,7 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
     panic(err)
   }
   var broadcastContainer []Broadcast
-  var playerList []string
+  var playerList []Player
   for {
     select {
     case isVineOn := <- vineOn:
@@ -498,17 +498,49 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
         pass := userPass[1]
         name := userPass[0]
         play = lookupPlayer(name, pass)
+        fmt.Println(play.Name+"LOGGED IN")
+        play.Session = UIDMaker()
+        playerList = append(playerList, play)
+
         playBytes, err := bson.Marshal(play)
         if err != nil {
           panic(err)
         }
-        fmt.Println(play.Name+"LOGGED IN")
-        playerList = append(playerList, play.Name)
         _, err = response.SendBytes(playBytes, 0)
         if err != nil {
           panic(err)
         }
         players <- play.Name
+    }else if strings.Contains(request, "::CHECK::") {
+        playerHash := strings.Split(request, "::CHECK::")[0]
+        playerSession := strings.Split(request, "::CHECK::")[1]
+        done := false
+        for i := 0;i < len(playerList);i++ {
+          if playerList[i].PlayerHash == playerHash {
+            if playerList[i].Session == playerSession {
+              fmt.Println(playerList[i].Session)
+              _, err  = response.Send("OK", 0)
+              if err != nil {
+                panic(err)
+              }
+              done = true
+            }
+          }
+        }
+        if !done {
+          _, err = response.Send("+__+SHUTDOWN+__+", 0)
+          if err != nil {
+            fmt.Println(err)
+          }
+        }
+      }else if request == "::INVALIDATE::" {
+        for i := 0;i < len(playerList);i++ {
+          playerList[i].Session = "INVALID SELECTION"
+        }
+        _, err = response.Send("DONE", 0)
+        if err != nil {
+          panic(err)
+        }
     }else if strings.Contains(request, "+++") {
       toSend := showChat()
       fmt.Println("Sending chat list")
@@ -544,10 +576,9 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
     }else if strings.Contains(request, "+==LOGOUT") {
         playerToLogOut := strings.Split(request, "+==LOGOUT")[0]
         for i := 0;i < len(playerList);i++ {
-          if strings.ToLower(playerList[i]) == strings.ToLower(playerToLogOut) {
-            fmt.Println(playerList[i]+ "LOGGED OUT")
-            response.Send("LOGGED "+playerList[i]+" OUT", 0)
-            playerList[i] = ""
+          if strings.ToLower(playerList[i].Name) == strings.ToLower(playerToLogOut) {
+            fmt.Println(playerList[i].Name+ "LOGGED OUT")
+            response.Send("LOGGED "+playerList[i].Name+" OUT", 0)
             players <- "LOGOUT||"+strings.ToLower(playerToLogOut)
 
           }
