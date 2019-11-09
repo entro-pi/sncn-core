@@ -603,8 +603,22 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
       if err != nil {
         panic(err)
       }
-      }else if request == "--ok--" {
+      }else if strings.HasPrefix(request, "--SELECT:") {
+        fmt.Println("GOT SELECTOR")
+        fmt.Println("Clearing selection")
+        for i := 0;i < len(broadcastContainer);i++ {
+          broadcastContainer[i].Payload.Selected = false
+        }
+        numSelected, err := strconv.Atoi(strings.Split(request, "--SELECT:")[1])
+        if err != nil {
+          panic(err)
+        }
         fmt.Println(string(request))
+        for i := 0;i < len(broadcastContainer);i++ {
+          if i == numSelected {
+            broadcastContainer[i].Payload.Selected = true
+          }
+        }
         broadBytes, err := json.Marshal(broadcastContainer)
         if err != nil {
           panic(err)
