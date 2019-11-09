@@ -588,6 +588,7 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
       bs.Payload.Name = strings.Split(request, "--+--")[0]
       bs.Payload.Game = "snowcrash.network"
       bs.Payload.Selected = false
+      bs.Payload.BigMessage = "==oh\n==hai\n=====dere\n==="
       for row := 1;row <= 20;row += 4 {
         for col := 53;col <= 143;col += 30 {
 
@@ -663,19 +664,40 @@ func AssembleBroadside(broadside Broadcast, row int, col int) (string) {
 		words = "                            "
 	}
 
-	row++
-	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;20;255;50m \033[48;2;10;10;20m", wor, "\033[48;2;20;255;50m \033[0m")
-	row++
-	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;20;255;50m \033[48;2;10;10;20m", word, "\033[48;2;20;255;50m \033[0m")
-	row++
-	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;20;255;50m \033[48;2;10;10;20m", words, "\033[48;2;20;255;50m \033[0m")
-	row++
-	if broadside.Payload.Game == "" {
-		broadside.Payload.Game = "snowcrash"
-	}
-	namePlate := "                            "[len(broadside.Payload.Name+"@"+broadside.Payload.Game):]
-	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;20;255;50m@"+broadside.Payload.Name+"@"+broadside.Payload.Game+namePlate+"\033[48;2;20;255;50m \033[0m")
+  	row++
+  	if broadside.Payload.Selected {
+  		cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;200;25;150m ", wor, "\033[48;2;200;25;150m \033[0m")
+  	}else {
+  		cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;20;255;50m \033[48;2;10;10;20m", wor, "\033[48;2;20;255;50m \033[0m")
+  	}
 
+  	row++
+  	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;20;255;50m \033[48;2;10;10;20m", word, "\033[48;2;20;255;50m \033[0m")
+  	row++
+  	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;20;255;50m \033[48;2;10;10;20m", words, "\033[48;2;20;255;50m \033[0m")
+  	row++
+  	if broadside.Payload.Game == "" {
+  		if broadside.Payload.Selected {
+  			broadside.Payload.Game = "SELECTED"
+  		} else {
+  			broadside.Payload.Game = "snowcrash"
+  		}
+  	}
+  	namePlate := "                            "[len(broadside.Payload.Name+"@"+broadside.Payload.Game):]
+  	if broadside.Payload.Selected {
+  		cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;200;25;150m @"+broadside.Payload.Name+"@"+broadside.Payload.Game+namePlate+"\033[48;2;200;25;50m \033[0m")
+  	}else {
+  		cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;20;255;50m@"+broadside.Payload.Name+"@"+broadside.Payload.Game+namePlate+"\033[48;2;20;255;50m \033[0m")
+
+  	}
+  	broadRow := 0
+  	if broadside.Payload.Selected && len(strings.Split(broadside.Payload.BigMessage, "\n")) > 1 {
+  		bigSplit := strings.Split(broadside.Payload.BigMessage, "\n")
+  		for i := 0;i < len(bigSplit);i++ {
+  			cel += fmt.Sprint("\033["+strconv.Itoa(22+broadRow)+";53H\033[48:2:200:0:200m \033[0m"+bigSplit[broadRow]+"\033[48:2:200:0:200m \033[0m")
+  			broadRow++
+  		}
+  	}
 	return cel
 	//	fmt.Println(cel)
 }
