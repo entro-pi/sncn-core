@@ -124,7 +124,9 @@ func client(broadcast []Broadcast, clientid string, secret string, url string, p
             fmt.Println("\033[38:2:0:200:0mBroadcast Send\033[0m")
               channel := strings.Split(playersLog, "||UWU||")[1]
               playName := strings.Split(playersLog, "||UWU||")[0]
-              message := strings.Split(playersLog, "||}}{{||")[1]
+              messageParts := strings.Split(playersLog, "||}}{{||")[1]
+              message := strings.Split(messageParts, "+++")[0]
+              messageLong := strings.Split(messageParts, "+++")[1]
               //player should be assigned to this
               _ = strings.Split(playersLog, "||UWU||")[0]
               var Send SendBroadcast
@@ -139,6 +141,8 @@ func client(broadcast []Broadcast, clientid string, secret string, url string, p
               Save.Payload.Name = playName
               Send.Payload.Message = message
               Save.Payload.Message = message
+              Send.Payload.BigMessage = messageLong
+              Save.Payload.BigMessage = messageLong
               SendJSON, err := json.Marshal(Send)
               initGrape(Save)
               if err != nil {
@@ -288,6 +292,47 @@ func hash(value string) string {
     newVal += strconv.Itoa(int(value[i])*32+100)
   }
   return newVal
+}
+func updatePlayerSlain(hash string) {
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+  if err != nil {
+    panic(err)
+  }
+  ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+  err = client.Connect(ctx)
+  if err != nil {
+    panic(err)
+  }
+  var player Player
+  collection := client.Database("pfiles").Collection("Players")
+
+  result  := collection.FindOne(context.Background(), bson.M{"playerhash": bson.M{"$eq":hash}})
+  if err != nil {
+    panic(err)
+  }
+  err = result.Decode(&player)
+  if err != nil {
+    fmt.Println("\033[38:2:150:0:150mPlayerfile requested was not found\033[0m")
+  }
+
+  player.Slain++
+
+  if err != nil {
+    panic(err)
+  }
+  _, err = collection.UpdateOne(context.Background(), options.Update().SetUpsert(true), bson.M{"$set":bson.M{"name":player.Name,"title":player.Title,"inventory":player.Inventory, "equipment":player.Equipment,
+						"coreboard": player.CoreBoard,"currentroom":player.CurrentRoom,"slain":player.Slain, "hoarded":player.Hoarded, "str": player.Str, "int": player.Int, "dex": player.Dex, "wis": player.Wis, "con":player.Con, "cha":player.Cha, "classes": player.Classes }})
+
+  if err != nil {
+    panic(err)
+  }
+
+
+
+
+
+
+
 }
 func lookupPlayer(name string, pass string) Player {
   client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
@@ -483,6 +528,21 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
         panic(err)
       }
 
+    }else if strings.Contains(request, "++SAVE++"){
+      if len(strings.Split(request, "++SAVE++")) == 2 {
+        hash := strings.Split(request, "++SAVE++")[1]
+        updatePlayerSlain(hash)
+        fmt.Println("Saved")
+        response.Send("SAVING", 0)
+        playHolder, err := response.RecvBytes(0)
+        err = bson.Unmarshal(playHolder, &play)
+        if err != nil {
+          panic(err)
+        }
+        fmt.Println("\033[38:2:200:0:200m",play,"\033[0m")
+        savePfile(play)
+        response.Send("SAVED", 0)
+      }
     }else if strings.Contains(request, "+==LOGOUT") {
         playerToLogOut := strings.Split(request, "+==LOGOUT")[0]
         for i := 0;i < len(playerList);i++ {

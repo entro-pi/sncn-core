@@ -386,7 +386,7 @@ func addPfile(play Player, pass string) {
 	}
 	collection := client.Database("pfiles").Collection("Players")
 	_, err = collection.InsertOne(context.Background(), bson.M{"playerhash": hash(play.Name+pass),"name":play.Name,"title":play.Title,"inventory":play.Inventory, "equipment":play.Equipment,
-						"coreboard": play.CoreBoard, "str": play.Str, "int": play.Int, "dex": play.Dex, "wis": play.Wis, "con":play.Con, "cha":play.Cha, "classes": play.Classes })
+						"coreboard": play.CoreBoard,"slain": play.Slain,"hoarded": play.Hoarded, "str": play.Str, "int": play.Int, "dex": play.Dex, "wis": play.Wis, "con":play.Con, "cha":play.Cha, "classes": play.Classes })
 }
 func savePfile(play Player) {
 	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
@@ -398,7 +398,11 @@ func savePfile(play Player) {
 	if err != nil {
 		panic(err)
 	}
+	filter := bson.M{"playerhash":bson.M{"$eq":play.PlayerHash}}
 	collection := client.Database("pfiles").Collection("Players")
-	_, err = collection.UpdateOne(context.Background(), options.Update().SetUpsert(true), bson.M{"name":play.Name,"title":play.Title,"inventory":play.Inventory, "equipment":play.Equipment,
-						"coreboard": play.CoreBoard,"currentroom":play.CurrentRoom, "str": play.Str, "int": play.Int, "dex": play.Dex, "wis": play.Wis, "con":play.Con, "cha":play.Cha, "classes": play.Classes })
+	_, err = collection.UpdateOne(context.Background(), filter, bson.M{"$set":bson.M{"playerhash": play.PlayerHash,"name":play.Name,"title":play.Title,"inventory":play.Inventory, "equipment":play.Equipment,
+						"coreboard": play.CoreBoard,"slain": play.Slain,"hoarded": play.Hoarded, "str": play.Str, "int": play.Int, "dex": play.Dex, "wis": play.Wis, "con":play.Con, "cha":play.Cha, "classes": play.Classes }})
+	if err != nil {
+		panic(err)
+	}
 }

@@ -68,6 +68,7 @@ type BroadcastPayload struct {
 	Row int
 	Col int
 	Selected bool
+	BigMessage string
 }
 type Broadcast struct {
     Event string
@@ -80,6 +81,7 @@ type SendBPayload struct {
   Channel string
   Name string
   Message string
+	BigMessage string
 }
 
 type SendBroadcast struct {
