@@ -372,7 +372,7 @@ func getGrapes() []Broadcast {
     panic(err)
   }
 
-  collection := client.Database("broadcasts").Collection("snowcrash")
+  collection := client.Database("broadcasts").Collection("general")
   curs, err := collection.Find(context.Background(), bson.M{})
   if err != nil {
     panic(err)
@@ -424,7 +424,8 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
   if err != nil {
     panic(err)
   }
-  var broadcastContainer []Broadcast
+//  var broadcastContainer []Broadcast
+  broadcastContainer := getBroadcasts()
   var playerList []Player
   for {
     select {
@@ -595,13 +596,13 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
 //        goTo(dest int, play Player, populated []Space)
       }
     }else if strings.Contains(request, "=+=") {
-      broadcast = getGrapes()
+      broadcastContainer = getBroadcasts()
       out := ""
       outVal := ""
       row := 0
-      fmt.Println(broadcast)
-      for i := 0;i < len(broadcast);i++ {
-        outVal = AssembleBroadside(broadcast[i], row, 207)
+      fmt.Println(broadcastContainer)
+      for i := 0;i < len(broadcastContainer);i++ {
+        outVal = AssembleBroadside(broadcastContainer[i], broadcastContainer[i].Payload.Row, broadcastContainer[i].Payload.Col)
         row += 4
         out += outVal
       }
@@ -609,7 +610,24 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
       if err != nil {
         panic(err)
       }
-
+      }else if strings.Contains(request, "--UPSERT--") {
+        _, err = response.Send("OKTOSEND", 0)
+        if err != nil {
+          panic(err)
+        }
+        socBytes, err := response.RecvBytes(0)
+        if err != nil {
+          panic(err)
+        }
+        var broac Broadcast
+        err = json.Unmarshal(socBytes, &broac)
+        if err != nil {
+          panic(err)
+        }
+      //    fmt.Println("THIS SHOULD NOT BE ZERO")
+      //      fmt.Println(broadcastContainer)
+          insertBroadcast(broac)
+          _, err = response.Send("DONE", 0)
     }else if strings.Contains(request, "--+--") {
       _, err = response.Send("OKTOSEND", 0)
       if err != nil {
@@ -624,6 +642,9 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
       if err != nil {
         panic(err)
       }
+  //    fmt.Println("THIS SHOULD NOT BE ZERO")
+//      fmt.Println(broadcastContainer)
+  //    insertBroadcast(broadcastContainer)
       out := ""
       BROAD:
       for count := 0;count < len(broadcastContainer);count++ {
@@ -641,6 +662,7 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
         }
 
       }
+
       _, err = response.Send(out, 0)
       if err != nil {
         panic(err)
@@ -671,7 +693,7 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
         }
         fmt.Println("Send ok")
       }else {
-
+        broadcastContainer = getBroadcasts()
   //    in <- request
       _, err := response.Send("INVALID REQUEST", 0)
       fmt.Println("\033[38:2:150:0:150m"+request+"\033[0m")

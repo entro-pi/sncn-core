@@ -15,6 +15,37 @@ import (
   "go.mongodb.org/mongo-driver/mongo/options"
 )
 
+func getBroadcasts() []Broadcast {
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	if err != nil {
+		panic(err)
+	}
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	err = client.Connect(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	findOptions := options.Find()
+	findOptions.SetLimit(25)
+	collection := client.Database("broadcasts").Collection("general")
+
+	result, err := collection.Find(context.Background(), bson.M{}, findOptions)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("\033[38:2:255:0:0m", result, "\033[0m")
+	var container []Broadcast
+
+	err = result.All(context.Background(), &container)
+	if err != nil {
+		panic(err)
+	}
+		fmt.Print("\033[38:2:0:0:200m",container, "\033[0m")
+	return container
+}
+
+
 func digDug(pos []int, play Player, digFrame [][]int, digNums string, digZone string, digNum int, populated []Space) (int, Space) {
 	digVnumEnd := strings.Split(digNums, "-")[1]
 	dg, digNum := initDigRoom(digFrame, digNums, digZone, play, digNum)
