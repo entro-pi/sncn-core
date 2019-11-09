@@ -602,6 +602,7 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
       row := 0
 //      fmt.Println(broadcastContainer)
       for i := 0;i < len(broadcastContainer);i++ {
+        broadcastContainer[i].Payload.ID = i
         outVal = AssembleBroadside(broadcastContainer[i], broadcastContainer[i].Payload.Row, broadcastContainer[i].Payload.Col)
         row += 4
         out += outVal
@@ -653,6 +654,7 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
             if count >= len(broadcastContainer) {
               break BROAD
             }
+            broadcastContainer[count].Payload.ID = count
             broad := AssembleBroadside(broadcastContainer[count], row, col)
             broadcastContainer[count].Payload.Row = row
             broadcastContainer[count].Payload.Col = col
@@ -679,6 +681,8 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
           fmt.Println("Non-integer index! Trying a fuzzy match!")
           for i := 0;i < len(broadcastContainer);i++ {
             if strings.Contains(broadcastContainer[i].Payload.Message, match) {
+              broadcastContainer[i].Payload.Selected = true
+            }else if strings.Contains(broadcastContainer[i].Ref, match) {
               broadcastContainer[i].Payload.Selected = true
             }
           }
@@ -751,9 +755,9 @@ func AssembleBroadside(broadside Broadcast, row int, col int) (string) {
 
   	row++
   	if broadside.Payload.Selected {
-  		cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;200;25;150m ", wor, "\033[48;2;200;25;150m \033[0m")
+  		cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;200;25;150m ",broadside.Ref, wor[len(broadside.Ref):], "\033[48;2;200;25;150m \033[0m")
   	}else {
-  		cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;20;255;50m \033[48;2;10;10;20m", wor, "\033[48;2;20;255;50m \033[0m")
+  		cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;20;255;50m \033[48;2;10;10;20m",broadside.Ref, wor[len(broadside.Ref):], "\033[48;2;20;255;50m \033[0m")
   	}
 
   	row++
@@ -768,11 +772,13 @@ func AssembleBroadside(broadside Broadcast, row int, col int) (string) {
   			broadside.Payload.Game = "snowcrash"
   		}
   	}
-  	namePlate := "                            "[len(broadside.Payload.Name+"@"+broadside.Payload.Game):]
+
+    numString := strconv.Itoa(broadside.Payload.ID)
+  	namePlate := "                            "[len(broadside.Payload.Name+numString):]
   	if broadside.Payload.Selected {
-  		cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;200;25;150m @"+broadside.Payload.Name+"@"+broadside.Payload.Game+namePlate+"\033[48;2;200;25;50m \033[0m")
+  		cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;200;25;150m @"+broadside.Payload.Name+"@"+numString+namePlate+"\033[48;2;200;25;50m \033[0m")
   	}else {
-  		cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;20;255;50m@"+broadside.Payload.Name+"@"+broadside.Payload.Game+namePlate+"\033[48;2;20;255;50m \033[0m")
+  		cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;20;255;50m@"+broadside.Payload.Name+"@"+numString+namePlate+"\033[48;2;20;255;50m \033[0m")
 
   	}
   	broadRow := 0
