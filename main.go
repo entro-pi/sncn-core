@@ -611,26 +611,37 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
       }
 
     }else if strings.Contains(request, "--+--") {
-      var bs Broadcast
-
-      out := ""
-      bs.Payload.Message = "Kaboom!"
-      bs.Payload.Channel = "BS"
-      bs.Payload.Name = strings.Split(request, "--+--")[0]
-      bs.Payload.Game = "snowcrash.network"
-      bs.Payload.Selected = false
-      bs.Payload.BigMessage = "==oh\n==hai\n=====dere\n==="
-      for row := 0;row <= 20;row += 4 {
-        for col := 53;col <= 143;col += 30 {
-
-          broad := AssembleBroadside(bs, row, col)
-          bs.Payload.Row = row
-          bs.Payload.Col = col
-          out += broad
-          broadcastContainer = append(broadcastContainer, bs)
-        }
+      _, err = response.Send("OKTOSEND", 0)
+      if err != nil {
+        panic(err)
       }
-      _, err := response.Send(out, 0)
+      socBytes, err := response.RecvBytes(0)
+      if err != nil {
+        panic(err)
+      }
+
+      err = json.Unmarshal(socBytes, &broadcastContainer)
+      if err != nil {
+        panic(err)
+      }
+      out := ""
+      BROAD:
+      for count := 0;count < len(broadcastContainer);count++ {
+        for row := 0;row <= 20;row += 4 {
+          for col := 53;col <= 143;col += 30 {
+            if count >= len(broadcastContainer) {
+              break BROAD
+            }
+            broad := AssembleBroadside(broadcastContainer[count], row, col)
+            broadcastContainer[count].Payload.Row = row
+            broadcastContainer[count].Payload.Col = col
+            out += broad
+            count++
+          }
+        }
+
+      }
+      _, err = response.Send(out, 0)
       if err != nil {
         panic(err)
       }
