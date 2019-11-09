@@ -675,7 +675,14 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
         }
         numSelected, err := strconv.Atoi(strings.Split(request, "--SELECT:")[1])
         if err != nil {
-          panic(err)
+          match := strings.Split(request, "--SELECT:")[1]
+          fmt.Println("Non-integer index! Trying a fuzzy match!")
+          for i := 0;i < len(broadcastContainer);i++ {
+            if strings.Contains(broadcastContainer[i].Payload.Message, match) {
+              broadcastContainer[i].Payload.Selected = true
+            }
+          }
+          numSelected = -1
         }
         //fmt.Println(string(request))
         for i := 0;i < len(broadcastContainer);i++ {
