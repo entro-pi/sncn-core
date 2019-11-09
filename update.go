@@ -87,11 +87,11 @@ func insertBroadcasts(broadside []Broadcast) {
   for i := 0;i < len(broadside);i++ {
     update := bson.M{"event":broadside[i].Event,"ref":broadside[i].Ref,"payload":bson.M{"channel":broadside[i].Payload.Channel,"message":broadside[i].Payload.Message,"game":broadside[i].Payload.Game, "name":broadside[i].Payload.Name, "row":broadside[i].Payload.Row, "col":broadside[i].Payload.Col, "selected":false,"bigmessage":broadside[i].Payload.BigMessage}}
 
-  	result, err := collection.InsertOne(context.Background(), update)
+  	_, err := collection.InsertOne(context.Background(), update)
   	if err != nil {
   		panic(err)
   	}
-    fmt.Println("\033[38:2:255:0:0m", result, "\033[0m")
+    //fmt.Println("\033[38:2:255:0:0m", result, "\033[0m")
 
   }
 }
@@ -110,11 +110,11 @@ func insertBroadcast(broadside Broadcast) {
 
   update := bson.M{"event":broadside.Event,"ref":broadside.Ref,"payload":bson.M{"channel":broadside.Payload.Channel,"message":broadside.Payload.Message,"game":broadside.Payload.Game, "name":broadside.Payload.Name, "row":broadside.Payload.Row, "col":broadside.Payload.Col, "selected":false,"bigmessage":broadside.Payload.BigMessage}}
 
-	result, err := collection.InsertOne(context.Background(), update)
+	_, err = collection.InsertOne(context.Background(), update)
 	if err != nil {
 		panic(err)
 	}
-  fmt.Println("\033[38:2:255:0:0m", result, "\033[0m")
+//  fmt.Println("\033[38:2:255:0:0m", result, "\033[0m")
 
 
 }

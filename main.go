@@ -600,7 +600,7 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
       out := ""
       outVal := ""
       row := 0
-      fmt.Println(broadcastContainer)
+//      fmt.Println(broadcastContainer)
       for i := 0;i < len(broadcastContainer);i++ {
         outVal = AssembleBroadside(broadcastContainer[i], broadcastContainer[i].Payload.Row, broadcastContainer[i].Payload.Col)
         row += 4
@@ -677,7 +677,7 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
         if err != nil {
           panic(err)
         }
-        fmt.Println(string(request))
+        //fmt.Println(string(request))
         for i := 0;i < len(broadcastContainer);i++ {
           if i == numSelected {
             broadcastContainer[i].Payload.Selected = true
@@ -696,7 +696,7 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
         broadcastContainer = getBroadcasts()
   //    in <- request
       _, err := response.Send("INVALID REQUEST", 0)
-      fmt.Println("\033[38:2:150:0:150m"+request+"\033[0m")
+  //    fmt.Println("\033[38:2:150:0:150m"+request+"\033[0m")
       if err != nil {
         panic(err)
       }

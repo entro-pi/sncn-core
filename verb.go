@@ -34,14 +34,14 @@ func getBroadcasts() []Broadcast {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("\033[38:2:255:0:0m", result, "\033[0m")
+//	fmt.Println("\033[38:2:255:0:0m", result, "\033[0m")
 	var container []Broadcast
 
 	err = result.All(context.Background(), &container)
 	if err != nil {
 		panic(err)
 	}
-		fmt.Print("\033[38:2:0:0:200m",container, "\033[0m")
+	//	fmt.Print("\033[38:2:0:0:200m",container, "\033[0m")
 	return container
 }
 
