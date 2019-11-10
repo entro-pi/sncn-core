@@ -27,7 +27,7 @@ func getBroadcasts() []Broadcast {
 	}
 
 	findOptions := options.Find()
-	findOptions.SetLimit(25)
+	findOptions.SetLimit(1000)
 	collection := client.Database("broadcasts").Collection("general")
 
 	result, err := collection.Find(context.Background(), bson.M{}, findOptions)
