@@ -680,9 +680,10 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
           match := strings.Split(request, "--SELECT:")[1]
           fmt.Println("Non-integer index! Trying a fuzzy match!")
           for i := 0;i < len(broadcastContainer);i++ {
+            stringID := strconv.Itoa(broadcastContainer[i].Payload.ID)
             if strings.Contains(broadcastContainer[i].Payload.Message, match) {
               broadcastContainer[i].Payload.Selected = true
-            }else if strings.Contains(broadcastContainer[i].Ref, match) {
+            }else if strings.Contains(stringID, match) {
               broadcastContainer[i].Payload.Selected = true
             }
           }
