@@ -33,10 +33,8 @@ func initDigRoom(digFrame [][]int, zoneVnums string, zoneName string, play Playe
 func InitPlayer(name string, pass string) Player {
 	var play Player
   play.PlayerHash = hash(name+pass)
-	var inv []int
 	var equ []int
   var class Class
-	inv = append(inv, 1)
 	equ = append(equ, 1)
 	play.Name = name
 	play.Title = "The Unknown"
@@ -57,7 +55,7 @@ func InitPlayer(name string, pass string) Player {
   blast.Consumed = false
   play.Classes[0].Spells = append(play.Classes[0].Spells, blast)
 
-	play.Inventory = inv
+	play.Inventory = make([]InventoryItem, 20, 20)
 	play.Equipment = equ
   play.Rezz = 17
   play.MaxRezz = play.Rezz

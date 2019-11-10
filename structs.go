@@ -141,10 +141,14 @@ type Object struct {
 	Y int
 	Owned bool
 }
+type InventoryItem struct {
+	Item Object
+	Number int
+}
 type Player struct {
 	Name string
 	Title string
-	Inventory []int
+	Inventory []InventoryItem
 	Equipment []int
 	CoreBoard string
 	PlainCoreBoard string

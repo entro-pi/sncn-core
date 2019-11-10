@@ -431,7 +431,8 @@ func savePfile(play Player) {
 	}
 	filter := bson.M{"playerhash":bson.M{"$eq":play.PlayerHash}}
 	collection := client.Database("pfiles").Collection("Players")
-	_, err = collection.UpdateOne(context.Background(), filter, bson.M{"$set":bson.M{"playerhash": play.PlayerHash,"name":play.Name,"title":play.Title,"inventory":play.Inventory, "equipment":play.Equipment,
+	_, err = collection.UpdateOne(context.Background(), filter, bson.M{"$set":bson.M{
+		"inventory":play.Inventory,"playerhash": play.PlayerHash,"name":play.Name,"title":play.Title,"equipment":play.Equipment,
 						"coreboard": play.CoreBoard,"slain": play.Slain,"hoarded": play.Hoarded, "str": play.Str, "int": play.Int, "dex": play.Dex, "wis": play.Wis, "con":play.Con, "cha":play.Cha, "classes": play.Classes }})
 	if err != nil {
 		panic(err)
