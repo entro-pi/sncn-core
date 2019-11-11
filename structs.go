@@ -111,6 +111,7 @@ type Space struct{
 	Vnum int
 	Desc string
 	Mobiles []int
+	MobilesInRoom []Mobile
 	Items []int
 	CoreBoard string
 	Exits Exit
@@ -136,6 +137,7 @@ type Object struct {
 	Vnum int
 	Zone string
 	Owner Player
+	Slot int
 	Value int
 	X int
 	Y int
@@ -145,11 +147,15 @@ type InventoryItem struct {
 	Item Object
 	Number int
 }
+type EquipmentItem struct {
+	Item Object
+}
 type Player struct {
 	Name string
 	Title string
 	Inventory []InventoryItem
 	Equipment []int
+	Equipped []EquipmentItem
 	CoreBoard string
 	PlainCoreBoard string
 	CurrentRoom Space
@@ -225,8 +231,9 @@ type Mobile struct {
 	MaxRezz int
 	Rezz int
 	Tech int
-	Aggro int
+	Aggro bool
 	Align int
+	Vnum int
 	X int
 	Y int
 	Char string

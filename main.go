@@ -810,7 +810,7 @@ func main() {
         descString := "The absence of light is blinding.\nThree large telephone poles illuminate a small square."
 
         InitZoneSpaces("5-15", "Midgaard", descString)
-        populated = PopulateAreas()
+        //populated = PopulateAreas()
         addPfile(dorp, "norp")
         dorp.CurrentRoom = populated[0]
         savePfile(dorp)
