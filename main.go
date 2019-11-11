@@ -424,6 +424,7 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
   if err != nil {
     panic(err)
   }
+  request := ""
 //  var broadcastContainer []Broadcast
   broadcastContainer := getBroadcasts()
   var playerList []Player
@@ -447,16 +448,28 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
       }
     default:
       fmt.Println("Grapevine Capable")
+      request = ""
     }
     fmt.Println("IN LOOP")
-    request, err := response.Recv(0)
-    if err != nil {
-      panic(err)
-    }
+    //request, err = response.Recv(0)
+    //if err != nil {
+    //  panic(err)
+    //}
 
 
     var play Player
-    in <- request
+    select {
+    case request = <- in:
+      _, err = response.Recv(0)
+      if err != nil {
+        panic(err)
+      }
+    default:
+      request, err = response.Recv(0)
+      if err != nil {
+        panic(err)
+      }
+    }
     if strings.Contains(request, ":"){
       fmt.Println(strings.Split(request, ":")[0]+"AUTHINFO")
     }else if strings.Contains(request, "+=+") {
