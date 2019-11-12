@@ -59,6 +59,21 @@ type SignInPayload struct {
 	Name string
 	Game string
 }
+type Bank struct {
+	Clientele Client
+	Owner string
+}
+//user and owner here will also be a playerhash
+//on a UIDMaker() result rather than the pass
+type Client struct {
+		User string
+		TotalAmount float64
+		Accounts []float64
+}
+type Account struct {
+	Owner string
+	Amount float64
+}
 
 type BroadcastPayload struct {
   Channel string
@@ -70,7 +85,29 @@ type BroadcastPayload struct {
 	Selected bool
 	BigMessage string
 	ID int
+	Transaction OnlineTransaction
+	Store OnlineStore
 }
+
+//Employer and owner will be a playerHash
+type Butler struct {
+	Employer string
+	Funds Account
+}
+type OnlineStore struct {
+	Owner string
+	Float float64
+	Inventory []OnlineTransaction
+}
+
+type OnlineTransaction struct {
+	ItemHash string
+	Item Object
+	Sold bool
+	To Account
+	Price float64
+}
+
 type Broadcast struct {
     Event string
     Ref string
@@ -163,6 +200,10 @@ type Player struct {
 	Classes []Class
 	Target string
 	TargetLong string
+	//ToBuy will have to either be an ItemHash
+	//Or a vnum
+	ToBuy int
+	BankAccount Account
 	TarX int
 	TarY int
 	OldX int

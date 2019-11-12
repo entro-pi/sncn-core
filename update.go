@@ -85,7 +85,7 @@ func insertBroadcasts(broadside []Broadcast) {
 	}
 	collection := client.Database("broadcasts").Collection("general")
   for i := 0;i < len(broadside);i++ {
-    update := bson.M{"event":broadside[i].Event,"ref":broadside[i].Ref,"payload":bson.M{"channel":broadside[i].Payload.Channel,"message":broadside[i].Payload.Message,"game":broadside[i].Payload.Game, "name":broadside[i].Payload.Name, "row":broadside[i].Payload.Row, "col":broadside[i].Payload.Col, "selected":false,"bigmessage":broadside[i].Payload.BigMessage}}
+    update := bson.M{"event":broadside[i].Event,"ref":broadside[i].Ref,"payload":bson.M{"channel":broadside[i].Payload.Channel,"message":broadside[i].Payload.Message,"game":broadside[i].Payload.Game, "name":broadside[i].Payload.Name, "row":broadside[i].Payload.Row, "col":broadside[i].Payload.Col, "selected":false,"bigmessage":broadside[i].Payload.BigMessage,"transaction":broadside[i].Payload.Transaction}}
 
   	_, err := collection.InsertOne(context.Background(), update)
   	if err != nil {
@@ -108,7 +108,7 @@ func insertBroadcast(broadside Broadcast) {
 	}
 	collection := client.Database("broadcasts").Collection("general")
 
-  update := bson.M{"event":broadside.Event,"ref":broadside.Ref,"payload":bson.M{"channel":broadside.Payload.Channel,"message":broadside.Payload.Message,"game":broadside.Payload.Game, "name":broadside.Payload.Name, "row":broadside.Payload.Row, "col":broadside.Payload.Col, "selected":false,"bigmessage":broadside.Payload.BigMessage}}
+  update := bson.M{"event":broadside.Event,"ref":broadside.Ref,"payload":bson.M{"channel":broadside.Payload.Channel,"message":broadside.Payload.Message,"game":broadside.Payload.Game, "name":broadside.Payload.Name, "row":broadside.Payload.Row, "col":broadside.Payload.Col, "selected":false,"bigmessage":broadside.Payload.BigMessage,"transaction":broadside.Payload.Transaction}}
 
 	_, err = collection.InsertOne(context.Background(), update)
 	if err != nil {

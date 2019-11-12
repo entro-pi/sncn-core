@@ -293,6 +293,13 @@ func hash(value string) string {
   }
   return newVal
 }
+func onlineHash(value string) string {
+  newVal := ""
+  for i := 0;i < len(value);i++ {
+    newVal += strconv.Itoa(int(value[i])*24+240)
+  }
+  return newVal
+}
 func updatePlayerSlain(hash string) {
   client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
   if err != nil {
@@ -334,6 +341,32 @@ func updatePlayerSlain(hash string) {
 
 
 }
+func lookupPlayerByHash(playerHash string) Player {
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+  if err != nil {
+    panic(err)
+  }
+  ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+  err = client.Connect(ctx)
+  if err != nil {
+    panic(err)
+  }
+  var player Player
+  collection := client.Database("pfiles").Collection("Players")
+
+  result  := collection.FindOne(context.Background(), bson.M{"playerhash": bson.M{"$eq":playerHash}})
+  if err != nil {
+    panic(err)
+  }
+  err = result.Decode(&player)
+  if err != nil {
+    fmt.Println("\033[38:2:150:0:150mPlayerfile requested was not found\033[0m")
+    var noob Player
+    noob.PlayerHash = "2"
+    return noob
+  }
+  return player
+}
 func lookupPlayer(name string, pass string) Player {
   client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
   if err != nil {
@@ -361,6 +394,81 @@ func lookupPlayer(name string, pass string) Player {
   return player
 
 }
+
+func onlineTransaction(advert *Broadcast, customer Player, allItems []Object) (Player, string) {
+  output := ""
+  if len(advert.Payload.Store.Inventory) > 0 {
+      for i := 0;i < len(advert.Payload.Store.Inventory);i++ {
+        hasSpace := false
+        slot := 0
+        vnum := advert.Payload.Store.Inventory[i].Item.Vnum
+        hash := advert.Payload.Store.Inventory[i].ItemHash
+        price := advert.Payload.Store.Inventory[i].Price
+        customerCash := customer.BankAccount.Amount
+        isSold := advert.Payload.Store.Inventory[i].Sold
+        fmt.Println("VNUM",vnum,"HASH",hash,"PRICE",price,"CUSTOMERCASH",customerCash,"ISSOLD",isSold)
+        for c := len(customer.Inventory) - 1;c > 0;c-- {
+          if customer.Inventory[c].Item.Name == "nothing" && !isSold {
+            hasSpace = true
+            slot = c
+          }
+        }
+        if customerCash >= price && hasSpace {
+            customer.BankAccount.Amount -= price
+        }
+        if hash == onlineHash(allItems[vnum].LongName) {
+          customer.Inventory[slot].Item = allItems[vnum]
+          customer.Inventory[slot].Number++
+          advert.Payload.Store.Inventory[i].Sold = true
+          fmt.Println("\033[38:2:0:200:0mTransaction approved.\033[0m")
+          output += fmt.Sprintln("\033[38:2:0:200:0mTransaction approved.\033[0m")
+
+          return customer, output
+        }
+      }
+  }else if !advert.Payload.Transaction.Sold {
+      hasSpace := false
+      hasCash := false
+      slot := 0
+      vnum := advert.Payload.Transaction.Item.Vnum
+      hash := advert.Payload.Transaction.ItemHash
+      price := advert.Payload.Transaction.Price
+      customerCash := customer.BankAccount.Amount
+
+      fmt.Println("VNUM",vnum,"HASH",hash,"PRICE",price,"CUSTOMERCASH",customerCash)
+      for c := len(customer.Inventory) - 1;c > 0;c-- {
+        if customer.Inventory[c].Item.Name == "nothing" {
+          hasSpace = true
+          slot = c
+        }
+      }
+      if customerCash >= price && hasSpace {
+          customer.BankAccount.Amount -= price
+          hasCash = true
+      }
+      if hasSpace && hasCash {
+        customer.Inventory[slot].Item = allItems[vnum]
+        customer.Inventory[slot].Number++
+        fmt.Println("\033[38:2:0:200:0mTransaction approved.\033[0m")
+        output += fmt.Sprintln("\033[38:2:0:200:0mTransaction approved.\033[0m")
+        return customer, output
+
+      }
+  }else {
+    output += fmt.Sprint("Looks like you missed out on the sale!")
+    output += fmt.Sprint("That is sold out!")
+  }
+  output += fmt.Sprintln("\033[38:2:200:0:0mTransaction not approved.\033[0m")
+  fmt.Println("\033[38:2:200:0:0mTransaction not approved.\033[0m")
+  return customer, output
+}
+
+func onlineButlerTransaction(advert Broadcast, customer Butler) Object {
+  //let's get players up first
+  var blank Object
+  return blank
+}
+
 func getGrapes() []Broadcast {
   client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
   if err != nil {
@@ -411,7 +519,7 @@ func initGrape(bcast Broadcast) Broadcast {
 
 }
 
-func loopInput(populated []Space, broadcast []Broadcast, in chan string, players chan string, vineOn chan bool, broadcastLine chan Broadcast) {
+func loopInput(populated []Space, broadcast []Broadcast, in chan string, players chan string, vineOn chan bool, broadcastLine chan Broadcast, allItems []Object) {
   fmt.Println("Core login procedure started")
 
   response, err := zmq.NewSocket(zmq.REP)
@@ -494,6 +602,45 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
     if strings.Contains(request, "||UWU||") {
       fmt.Println("GRAPE BROADSIDE")
       players <- request
+    }
+    if strings.Contains(request, "||SALE||") {
+      fmt.Println("\033[38:2:150:0:150mSale going down!\033[0m")
+      playerHash := strings.Split(request, "||SALE||")[0]
+      ref := strings.Split(request, "||SALE||")[1]
+      var advert Broadcast
+      //TODO
+      broadcasts := getBroadcasts()
+      found := false
+      GETADVERT:
+      for i := 0;i < len(broadcasts);i++ {
+        if broadcasts[i].Ref == ref {
+          advert = broadcasts[i]
+          fmt.Println("BROADCAST IS ",broadcasts[i].Payload)
+          fmt.Println("ADVERT VNUM IS",advert.Payload.Transaction.Item.Name)
+          found = true
+          break GETADVERT
+        }
+      }
+      if found {
+        play = lookupPlayerByHash(playerHash)
+        fmt.Println("ADVERT VNUM IS",advert.Payload.Transaction.Item.Name)
+        play, output := onlineTransaction(&advert, play, allItems)
+        _, err = response.Send(output, 0)
+        result, err := response.Recv(0)
+        fmt.Println(result)
+        playBytes, err := bson.Marshal(play)
+        if err != nil {
+          panic(err)
+        }
+        fmt.Println("GOT TO SEND PLAYER")
+        _, err = response.SendBytes(playBytes, 0)
+        fmt.Println("SENT PLAYER")
+        if err != nil {
+          panic(err)
+        }
+        response.Recv(0)
+        request = ""
+      }
     }
     if strings.Contains(request, ":-:") {
         userPass := strings.Split(request, ":-:")
@@ -766,12 +913,12 @@ func AssembleBroadside(broadside Broadcast, row int, col int) (string) {
 		}
 		words = "                            "
 	}
-
+    payloadString := strconv.Itoa(broadside.Payload.ID)
   	row++
   	if broadside.Payload.Selected {
-  		cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;200;25;150m ",broadside.Ref, wor[len(broadside.Ref):], "\033[48;2;200;25;150m \033[0m")
+  		cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;200;25;150m ",payloadString, wor[len(payloadString):], "\033[48;2;200;25;150m \033[0m")
   	}else {
-  		cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;20;255;50m \033[48;2;10;10;20m",broadside.Ref, wor[len(broadside.Ref):], "\033[48;2;20;255;50m \033[0m")
+  		cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;20;255;50m \033[48;2;10;10;20m",payloadString, wor[len(payloadString):], "\033[48;2;20;255;50m \033[0m")
   	}
 
   	row++
@@ -807,6 +954,7 @@ func AssembleBroadside(broadside Broadcast, row int, col int) (string) {
 	//	fmt.Println(cel)
 }
 func main() {
+    allItems := readItemsFromFile("dat/items/items.itm")
     broadcast := make([]Broadcast, 1)
     broadcastLine := make(chan Broadcast)
     vineOn := make(chan bool)
@@ -832,7 +980,7 @@ func main() {
       }
     }
     if !wizinit {
-      go loopInput(populated, broadcast, in, playerList, vineOn, broadcastLine)
+      go loopInput(populated, broadcast, in, playerList, vineOn, broadcastLine, allItems)
     }
     for {
       if !wizinit {
