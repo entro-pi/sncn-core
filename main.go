@@ -411,7 +411,7 @@ func onlineTransaction(advert *Broadcast, customer Player, allItems []Object) (P
         isSold := advert.Payload.Store.Inventory[i].Sold
         fmt.Println("VNUM",vnum,"HASH",hash,"PRICE",price,"CUSTOMERCASH",customerCash,"ISSOLD",isSold)
         for c := len(customer.Inventory) - 1;c > 0;c-- {
-          if customer.Inventory[c].Item.Name == "nothing" && !isSold {
+          if customer.Inventory[c].Item.Name == "nothing" {
             hasSpace = true
             slot = c
           }
@@ -440,7 +440,7 @@ func onlineTransaction(advert *Broadcast, customer Player, allItems []Object) (P
 
       fmt.Println("VNUM",vnum,"HASH",hash,"PRICE",price,"CUSTOMERCASH",customerCash)
       for c := len(customer.Inventory) - 1;c > 0;c-- {
-        if customer.Inventory[c].Item.Name == "nothing" {
+        if customer.Inventory[c].Item.Name == "nothing" || customer.Inventory[c].Item.Name == "" || customer.Inventory[c].Item.Name == advert.Payload.Transaction.Item.Name{
           hasSpace = true
           slot = c
         }
