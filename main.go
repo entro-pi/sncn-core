@@ -397,6 +397,9 @@ func lookupPlayer(name string, pass string) Player {
 
 func onlineTransaction(advert *Broadcast, customer Player, allItems []Object) (Player, string) {
   output := ""
+  if advert.Payload.Transaction.Sold {
+    return customer, "SOLD OUT"
+  }
   if len(advert.Payload.Store.Inventory) > 0 {
       for i := 0;i < len(advert.Payload.Store.Inventory);i++ {
         hasSpace := false
@@ -458,8 +461,8 @@ func onlineTransaction(advert *Broadcast, customer Player, allItems []Object) (P
     output += fmt.Sprint("Looks like you missed out on the sale!")
     output += fmt.Sprint("That is sold out!")
   }
-  output += fmt.Sprintln("\033[38:2:200:0:0mTransaction not approved.\033[0m")
-  fmt.Println("\033[38:2:200:0:0mTransaction not approved.\033[0m")
+  output += fmt.Sprintln("\033[38:2:200:0:0mTransaction declined.\033[0m")
+  fmt.Println("\033[38:2:200:0:0mTransaction declined.\033[0m")
   return customer, output
 }
 
@@ -545,7 +548,7 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
       if isVineOn == false {
         fmt.Println("Grapevine \033[38:2:200:0:0mInactive\033[0m")
         grapeVine(broadcast, players, vineOn, broadcastLine)
-        time.Sleep(15*time.Second)
+        //time.Sleep(15*time.Second)
       }
     case broadShip := <- broadcastLine:
       fmt.Println("Triggered broadSideLine")
@@ -587,7 +590,7 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
     }
 
     if strings.Contains(request, "\"event\": \"restart\",") {
-      time.Sleep(15*time.Second)
+      //time.Sleep(15*time.Second)
     }
     if strings.Contains(request, "+|+") {
 
@@ -625,9 +628,13 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
         play = lookupPlayerByHash(playerHash)
         fmt.Println("ADVERT VNUM IS",advert.Payload.Transaction.Item.Name)
         play, output := onlineTransaction(&advert, play, allItems)
+        if strings.Contains(output, "approved") {
+          advert.Payload.Transaction.Sold = true
+        }
+        updateBroadcast(advert)
         _, err = response.Send(output, 0)
-        result, err := response.Recv(0)
-        fmt.Println(result)
+        _, err := response.Recv(0)
+//        fmt.Println(result)
         playBytes, err := bson.Marshal(play)
         if err != nil {
           panic(err)

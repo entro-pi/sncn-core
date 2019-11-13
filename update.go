@@ -72,6 +72,27 @@ func updateZoneMap(play Player, populated []Space) {
 	}
 
 }
+func updateBroadcast(broadside Broadcast) {
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	if err != nil {
+		panic(err)
+	}
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	err = client.Connect(ctx)
+	if err != nil {
+		panic(err)
+	}
+	collection := client.Database("broadcasts").Collection("general")
+  filter := bson.M{"ref":bson.M{"$eq":broadside.Ref}}
+    update := bson.M{"$set":bson.M{"event":broadside.Event,"payload":bson.M{"channel":broadside.Payload.Channel,"message":broadside.Payload.Message,"game":broadside.Payload.Game, "name":broadside.Payload.Name, "row":broadside.Payload.Row, "col":broadside.Payload.Col, "selected":false,"bigmessage":broadside.Payload.BigMessage,"transaction":broadside.Payload.Transaction}}}
+  	result, err := collection.UpdateOne(context.Background(), filter, update, options.Update().SetUpsert(true))
+  	if err != nil {
+  		panic(err)
+  	}
+    
+    fmt.Println("\033[38:2:255:0:0m", result, "\033[0m")
+
+}
 
 func insertBroadcasts(broadside []Broadcast) {
 	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
