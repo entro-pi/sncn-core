@@ -5,6 +5,8 @@ import (
   "context"
   "time"
   "strings"
+  "os"
+  "bufio"
   "strconv"
   "go.mongodb.org/mongo-driver/bson"
   "go.mongodb.org/mongo-driver/mongo"
@@ -12,7 +14,17 @@ import (
 )
 
 func PopulateAreaMobiles() []Mobile {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+  userFile, err := os.Open("weaselcreds")
+  if err != nil {
+    panic(err)
+  }
+  defer userFile.Close()
+  scanner := bufio.NewScanner(userFile)
+  scanner.Scan()
+  user := scanner.Text()
+  scanner.Scan()
+  pass := scanner.Text()
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
 	if err != nil {
 		panic(err)
 	}
@@ -61,7 +73,17 @@ func PopulateAreaBuild(rangeVnums string) []Space {
 }
 
 func PopulateAreas() []Space {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+  userFile, err := os.Open("weaselcreds")
+  if err != nil {
+    panic(err)
+  }
+  defer userFile.Close()
+  scanner := bufio.NewScanner(userFile)
+  scanner.Scan()
+  user := scanner.Text()
+  scanner.Scan()
+  pass := scanner.Text()
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
 	if err != nil {
 		panic(err)
 	}

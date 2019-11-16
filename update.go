@@ -1,7 +1,8 @@
 package main
 
 import (
-
+  "os"
+  "bufio"
   "fmt"
   "context"
   "time"
@@ -10,7 +11,17 @@ import (
   "go.mongodb.org/mongo-driver/mongo/options"
 )
 func updateRoom(play Player, populated []Space) {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+  userFile, err := os.Open("weaselcreds")
+  if err != nil {
+    panic(err)
+  }
+  defer userFile.Close()
+  scanner := bufio.NewScanner(userFile)
+  scanner.Scan()
+  user := scanner.Text()
+  scanner.Scan()
+  pass := scanner.Text()
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
 	if err != nil {
 		panic(err)
 	}
@@ -35,7 +46,18 @@ func updateRoom(play Player, populated []Space) {
 }
 
 func updateZoneMap(play Player, populated []Space) {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+      userFile, err := os.Open("weaselcreds")
+    if err != nil {
+      panic(err)
+    }
+    defer userFile.Close()
+    scanner := bufio.NewScanner(userFile)
+    scanner.Scan()
+    user := scanner.Text()
+    scanner.Scan()
+    pass := scanner.Text()
+    client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
+
 	if err != nil {
 		panic(err)
 	}
@@ -73,7 +95,17 @@ func updateZoneMap(play Player, populated []Space) {
 
 }
 func updateBroadcast(broadside Broadcast) {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+  userFile, err := os.Open("weaselcreds")
+  if err != nil {
+    panic(err)
+  }
+  defer userFile.Close()
+  scanner := bufio.NewScanner(userFile)
+  scanner.Scan()
+  user := scanner.Text()
+  scanner.Scan()
+  pass := scanner.Text()
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
 	if err != nil {
 		panic(err)
 	}
@@ -89,13 +121,23 @@ func updateBroadcast(broadside Broadcast) {
   	if err != nil {
   		panic(err)
   	}
-    
+
     fmt.Println("\033[38:2:255:0:0m", result, "\033[0m")
 
 }
 
 func insertBroadcasts(broadside []Broadcast) {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+  userFile, err := os.Open("weaselcreds")
+  if err != nil {
+    panic(err)
+  }
+  defer userFile.Close()
+  scanner := bufio.NewScanner(userFile)
+  scanner.Scan()
+  user := scanner.Text()
+  scanner.Scan()
+  pass := scanner.Text()
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
 	if err != nil {
 		panic(err)
 	}
@@ -118,7 +160,17 @@ func insertBroadcasts(broadside []Broadcast) {
 }
 
 func insertBroadcast(broadside Broadcast) {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+  userFile, err := os.Open("weaselcreds")
+  if err != nil {
+    panic(err)
+  }
+  defer userFile.Close()
+  scanner := bufio.NewScanner(userFile)
+  scanner.Scan()
+  user := scanner.Text()
+  scanner.Scan()
+  pass := scanner.Text()
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
 	if err != nil {
 		panic(err)
 	}

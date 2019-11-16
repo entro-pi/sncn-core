@@ -16,7 +16,17 @@ import (
 )
 
 func getBroadcasts() []Broadcast {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	userFile, err := os.Open("weaselcreds")
+  if err != nil {
+    panic(err)
+  }
+  defer userFile.Close()
+  scanner := bufio.NewScanner(userFile)
+  scanner.Scan()
+  user := scanner.Text()
+  scanner.Scan()
+  pass := scanner.Text()
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
 	if err != nil {
 		panic(err)
 	}
@@ -367,7 +377,17 @@ func genCoreBoard(play Player, populated []Space) (string, Player) {
 
 //TODO make this modular
 func createChat(message string, player string) {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	userFile, err := os.Open("weaselcreds")
+  if err != nil {
+    panic(err)
+  }
+  defer userFile.Close()
+  scanner := bufio.NewScanner(userFile)
+  scanner.Scan()
+  user := scanner.Text()
+  scanner.Scan()
+  pass := scanner.Text()
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
 	if err != nil {
 		panic(err)
 	}
@@ -391,7 +411,17 @@ func createChat(message string, player string) {
 
 //TODO make this modular
 func createMobiles(name string) {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	userFile, err := os.Open("weaselcreds")
+  if err != nil {
+    panic(err)
+  }
+  defer userFile.Close()
+  scanner := bufio.NewScanner(userFile)
+  scanner.Scan()
+  user := scanner.Text()
+  scanner.Scan()
+  pass := scanner.Text()
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
 	if err != nil {
 		panic(err)
 	}
@@ -406,7 +436,17 @@ func createMobiles(name string) {
 }
 
 func addPfile(play Player, pass string) {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	userFile, err := os.Open("weaselcreds")
+  if err != nil {
+    panic(err)
+  }
+  defer userFile.Close()
+  scanner := bufio.NewScanner(userFile)
+  scanner.Scan()
+  user := scanner.Text()
+  scanner.Scan()
+  passCred := scanner.Text()
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+passCred+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
 	if err != nil {
 		panic(err)
 	}
@@ -420,7 +460,17 @@ func addPfile(play Player, pass string) {
 						"coreboard": play.CoreBoard,"slain": play.Slain,"hoarded": play.Hoarded, "str": play.Str, "int": play.Int, "dex": play.Dex, "wis": play.Wis, "con":play.Con, "cha":play.Cha, "classes": play.Classes })
 }
 func savePfile(play Player) {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	userFile, err := os.Open("weaselcreds")
+  if err != nil {
+    panic(err)
+  }
+  defer userFile.Close()
+  scanner := bufio.NewScanner(userFile)
+  scanner.Scan()
+  user := scanner.Text()
+  scanner.Scan()
+  pass := scanner.Text()
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
 	if err != nil {
 		panic(err)
 	}

@@ -7,6 +7,7 @@ import (
   "strings"
   "fmt"
   "os"
+  "bufio"
   "io/ioutil"
   "context"
   "go.mongodb.org/mongo-driver/bson"
@@ -301,7 +302,17 @@ func onlineHash(value string) string {
   return newVal
 }
 func updatePlayerSlain(hash string) {
-  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+  userFile, err := os.Open("weaselcreds")
+  if err != nil {
+    panic(err)
+  }
+  defer userFile.Close()
+  scanner := bufio.NewScanner(userFile)
+  scanner.Scan()
+  user := scanner.Text()
+  scanner.Scan()
+  pass := scanner.Text()
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
   if err != nil {
     panic(err)
   }
@@ -342,7 +353,17 @@ func updatePlayerSlain(hash string) {
 
 }
 func lookupPlayerByHash(playerHash string) Player {
-  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+  userFile, err := os.Open("weaselcreds")
+  if err != nil {
+    panic(err)
+  }
+  defer userFile.Close()
+  scanner := bufio.NewScanner(userFile)
+  scanner.Scan()
+  user := scanner.Text()
+  scanner.Scan()
+  pass := scanner.Text()
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
   if err != nil {
     panic(err)
   }
@@ -368,7 +389,17 @@ func lookupPlayerByHash(playerHash string) Player {
   return player
 }
 func lookupPlayer(name string, pass string) Player {
-  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+  userFile, err := os.Open("weaselcreds")
+  if err != nil {
+    panic(err)
+  }
+  defer userFile.Close()
+  scanner := bufio.NewScanner(userFile)
+  scanner.Scan()
+  user := scanner.Text()
+  scanner.Scan()
+  passCred := scanner.Text()
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+passCred+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
   if err != nil {
     panic(err)
   }
@@ -473,7 +504,17 @@ func onlineButlerTransaction(advert Broadcast, customer Butler) Object {
 }
 
 func getGrapes() []Broadcast {
-  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+  userFile, err := os.Open("weaselcreds")
+  if err != nil {
+    panic(err)
+  }
+  defer userFile.Close()
+  scanner := bufio.NewScanner(userFile)
+  scanner.Scan()
+  user := scanner.Text()
+  scanner.Scan()
+  pass := scanner.Text()
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
   if err != nil {
     panic(err)
   }
@@ -502,7 +543,17 @@ func getGrapes() []Broadcast {
 
 }
 func initGrape(bcast Broadcast) Broadcast {
-  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+  userFile, err := os.Open("weaselcreds")
+  if err != nil {
+    panic(err)
+  }
+  defer userFile.Close()
+  scanner := bufio.NewScanner(userFile)
+  scanner.Scan()
+  user := scanner.Text()
+  scanner.Scan()
+  pass := scanner.Text()
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
   if err != nil {
     panic(err)
   }
@@ -661,7 +712,7 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
         if err != nil {
           panic(err)
         }
-    }else if strings.Contains(request, ":=:") {
+/*    }else if strings.Contains(request, ":=:") {
         userPass := strings.Split(request, ":=:")
         pass := userPass[1]
         name := userPass[0]
@@ -678,7 +729,7 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
         if err != nil {
           panic(err)
         }
-        players <- play.Name
+        players <- play.Name*/
     }else if strings.Contains(request, "::CHECK::") {
         playerHash := strings.Split(request, "::CHECK::")[0]
         playerSession := strings.Split(request, "::CHECK::")[1]
