@@ -338,7 +338,7 @@ func updatePlayerSlain(hash string) {
   if err != nil {
     panic(err)
   }
-  _, err = collection.UpdateOne(context.Background(), options.Update().SetUpsert(true), bson.M{"$set":bson.M{"name":player.Name,"title":player.Title,"inventory":player.Inventory, "equipment":player.Equipment,
+  _, err = collection.UpdateOne(context.Background(), options.Update().SetUpsert(false), bson.M{"$set":bson.M{"name":player.Name,"title":player.Title,"inventory":player.Inventory, "equipped":player.Equipped,
 						"coreboard": player.CoreBoard,"currentroom":player.CurrentRoom,"slain":player.Slain, "hoarded":player.Hoarded, "str": player.Str, "int": player.Int, "dex": player.Dex, "wis": player.Wis, "con":player.Con, "cha":player.Cha, "classes": player.Classes }})
 
   if err != nil {
@@ -706,7 +706,7 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
         play = InitPlayer(name, pass)
         play.CurrentRoom = populated[0]
         addPfile(play, pass)
-        savePfile(play)
+//        savePfile(play)
         playBytes, err := bson.Marshal(play)
         _, err = response.SendBytes(playBytes, 0)
         if err != nil {
@@ -789,7 +789,7 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
           panic(err)
         }
         //fmt.Println("\033[38:2:200:0:200m",play,"\033[0m")
-        savePfile(play)
+      //  savePfile(play)
         response.Send("SAVED", 0)
       }
     }else if strings.Contains(request, "+==LOGOUT") {

@@ -38,7 +38,7 @@ func updateRoom(play Player, populated []Space) {
 			"mobiles": populated[play.CurrentRoom.Vnum].Mobiles, "items": populated[play.CurrentRoom.Vnum].Items,
 			 "altered": true,"zonepos":populated[play.CurrentRoom.Vnum].ZonePos, "zonemap": populated[play.CurrentRoom.Vnum].ZoneMap }}
 
-	result, err := collection.UpdateOne(context.Background(), filter, update, options.Update().SetUpsert(true))
+	result, err := collection.UpdateOne(context.Background(), filter, update, options.Update().SetUpsert(false))
 	if err != nil {
 		panic(err)
 	}
@@ -86,7 +86,7 @@ func updateZoneMap(play Player, populated []Space) {
 //		update := bson.M{"$set": bson.M{"zonepos":populated[current.Vnum].ZonePos, "zonemap": populated[play.CurrentRoom.Vnum].ZoneMap }}
     update := bson.M{"$set": bson.M{"zonepos":populated[current.Vnum].ZonePos, "zonemap": play.CurrentRoom.ZoneMap }}
 
-		result, err := collection.UpdateOne(context.Background(), filter, update, options.Update().SetUpsert(true))
+		result, err := collection.UpdateOne(context.Background(), filter, update, options.Update().SetUpsert(false))
 		if err != nil {
 			panic(err)
 		}
@@ -117,7 +117,7 @@ func updateBroadcast(broadside Broadcast) {
 	collection := client.Database("broadcasts").Collection("general")
   filter := bson.M{"ref":bson.M{"$eq":broadside.Ref}}
     update := bson.M{"$set":bson.M{"event":broadside.Event,"payload":bson.M{"channel":broadside.Payload.Channel,"message":broadside.Payload.Message,"game":broadside.Payload.Game, "name":broadside.Payload.Name, "row":broadside.Payload.Row, "col":broadside.Payload.Col, "selected":false,"bigmessage":broadside.Payload.BigMessage,"transaction":broadside.Payload.Transaction}}}
-  	result, err := collection.UpdateOne(context.Background(), filter, update, options.Update().SetUpsert(true))
+  	result, err := collection.UpdateOne(context.Background(), filter, update, options.Update().SetUpsert(false))
   	if err != nil {
   		panic(err)
   	}
