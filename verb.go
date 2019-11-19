@@ -77,59 +77,6 @@ func digDug(pos []int, play Player, digFrame [][]int, digNums string, digZone st
 }
 
 
-func AssembleComposeCel(chatMess Chat, row int, col int) (string) {
-	var cel string
-	colString := strconv.Itoa(col)
-	inWord := chatMess.Message
-	wor := ""
-	word := ""
-	words := ""
-	if len(inWord) > 68 {
-		return "DONE COMPOSTING"
-	}
-	if len(inWord) > 28 && len(inWord) > 54 {
-		wor += inWord[:28]
-		word += inWord[28:54]
-		words += inWord[54:]
-		for i := len(words); i <= 28; i++ {
-			words += " "
-		}
-	}
-	if len(inWord) > 28 && len(inWord) < 54 {
-		wor += inWord[:28]
-		word += inWord[28:]
-		for i := len(word); i <= 28; i++ {
-			word += " "
-		}
-		words = "                            "
-
-	}
-	if len(inWord) <= 28 {
-		wor = "                            "
-		word += ""
-		word += inWord
-		for i := len(word); i <= 28; i++ {
-			word += " "
-		}
-		words = "                            "
-	}
-
-	row++
-	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;20;255;50m \033[48;2;10;10;20m", wor, "\033[48;2;20;255;50m \033[0m")
-	row++
-	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;20;255;50m \033[48;2;10;10;20m", word, "\033[48;2;20;255;50m \033[0m")
-	row++
-	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;20;255;50m \033[48;2;10;10;20m", words, "\033[48;2;20;255;50m \033[0m")
-	row++
-	if chatMess.User == "" {
-		chatMess.User = "snowcrash"
-	}
-	namePlate := "                           @"[len(chatMess.User):]
-	cel += fmt.Sprint("\033["+strconv.Itoa(row)+";"+colString+"H\033[48;2;20;255;50m@"+chatMess.User+namePlate+"\033[48;2;20;255;50m \033[0m")
-
-	return cel
-	//	fmt.Println(cel)
-}
 
 
 func AssembleDescCel(room Space, row int) (string) {
@@ -199,7 +146,7 @@ func goTo(dest int, play Player, populated []Space) (Player, []Space) {
 		if dest == populated[i].Vnum {
 			play.CurrentRoom = populated[i]
 			fmt.Print(populated[i].Vnum, populated[i].Vnums, populated[i].Zone)
-			showDesc(play.CurrentRoom)
+			//showDesc(play.CurrentRoom)
 			DescribePlayer(play)
 			fmt.Printf("\033[0;0H\033[38:2:0:255:0mPASS\033[0m")
 			break
@@ -334,37 +281,37 @@ func genCoreBoard(play Player, populated []Space) (string, Player) {
     }
     play.PlainCoreBoard = newValue
     play.CoreBoard = newValue
-    showCoreBoard(play)
-    showChat()
-    showDesc(play.CurrentRoom)
+    //showCoreBoard(play)
+  //  //showChat()
+  //  //showDesc(play.CurrentRoom)
     time.Sleep(250*time.Millisecond)
     newValue = strings.ReplaceAll(newValue, "T", "\033[48;2;200;150;0mT\033[0m")
 
     play.CoreBoard = newValue
-    showCoreBoard(play)
-    showChat()
-    showDesc(play.CurrentRoom)
+    ////showCoreBoard(play)
+    //showChat()
+    //showDesc(play.CurrentRoom)
     time.Sleep(250*time.Millisecond)
     newValue = strings.ReplaceAll(newValue, "M", "\033[48;2;200;50;50mM\033[0m")
 
     play.CoreBoard = newValue
-    showCoreBoard(play)
-    showChat()
-    showDesc(play.CurrentRoom)
+    //showCoreBoard(play)
+    //showChat()
+    //showDesc(play.CurrentRoom)
     time.Sleep(250*time.Millisecond)
 		newValue = strings.ReplaceAll(newValue, "%", "\033[38;2;0;150;150m%\033[0m")
 
     play.CoreBoard = newValue
-    showCoreBoard(play)
-    showChat()
-    showDesc(play.CurrentRoom)
+    //showCoreBoard(play)
+    //showChat()
+    //showDesc(play.CurrentRoom)
     time.Sleep(250*time.Millisecond)
 		newValue = strings.ReplaceAll(newValue, "D", "\033[48;2;200;150;150mD\033[0m")
 
     play.CoreBoard = newValue
-    showCoreBoard(play)
-    showChat()
-    showDesc(play.CurrentRoom)
+    //showCoreBoard(play)
+    //showChat()
+    //showDesc(play.CurrentRoom)
     time.Sleep(250*time.Millisecond)
 		newValue = strings.ReplaceAll(newValue, " ", "\033[48;2;0;200;150m \033[0m")
 
@@ -374,6 +321,120 @@ func genCoreBoard(play Player, populated []Space) (string, Player) {
 	return outVal, play
 }
 
+func savePfile(play Player) {
+	userFile, err := os.Open("weaselcreds")
+  if err != nil {
+    panic(err)
+  }
+  defer userFile.Close()
+  scanner := bufio.NewScanner(userFile)
+  scanner.Scan()
+  user := scanner.Text()
+  scanner.Scan()
+  pass := scanner.Text()
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
+	if err != nil {
+		panic(err)
+	}
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	err = client.Connect(ctx)
+	if err != nil {
+		panic(err)
+	}
+	filter := bson.M{"playerhash":bson.M{"$eq":play.PlayerHash}}
+	collection := client.Database("pfiles").Collection("Players")
+	_, err = collection.UpdateOne(context.Background(),filter, bson.M{"$set":bson.M{
+		"playerhash":play.PlayerHash,"name":play.Name,
+		"title":play.Title,"inventory":play.Inventory,"level":play.Level,
+		 "equipped":play.Equipped,"coreboard": play.CoreBoard,
+		 "bankaccount":bson.M{"owner":play.Name,"amount":play.BankAccount.Amount},
+		  "str": play.Str, "int": play.Int, "dex": play.Dex, "wis": play.Wis,
+			"battling":play.Battling,"battlingmob":play.BattlingMob,"rezz":play.Rezz,
+			"tech":play.Tech,
+			 "con":play.Con, "cha":play.Cha, "classes": play.Classes }}, options.Update().SetUpsert(true))
+	if err != nil {
+		panic(err)
+	}
+	savePinv(play)
+	savePeq(play)
+}
+func savePinv(play Player) {
+	play = composeInv(play)
+	userFile, err := os.Open("weaselcreds")
+  if err != nil {
+    panic(err)
+  }
+  defer userFile.Close()
+  scanner := bufio.NewScanner(userFile)
+  scanner.Scan()
+  user := scanner.Text()
+  scanner.Scan()
+  pass := scanner.Text()
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
+	if err != nil {
+		panic(err)
+	}
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	err = client.Connect(ctx)
+	if err != nil {
+		panic(err)
+	}
+	filter := bson.M{"playerhash":bson.M{"$eq": play.PlayerHash}}
+	update := bson.M{"$set":bson.M{"itembank":bson.M{"slotone":play.ItemBank.SlotOne,
+		"slotoneamount":play.ItemBank.SlotOneAmount,"slottwo":play.ItemBank.SlotTwo,
+		"slottwoamount":play.ItemBank.SlotTwoAmount,"slotthree":play.ItemBank.SlotThree,
+		"slotthreeamount":play.ItemBank.SlotThreeAmount,"slotfour":play.ItemBank.SlotFour,"slotfouramount":play.ItemBank.SlotFourAmount,
+		"slotfiveamount":play.ItemBank.SlotFiveAmount,"slotsix":play.ItemBank.SlotSix,
+		"slotsixamount":play.ItemBank.SlotSixAmount,"slotseven":play.ItemBank.SlotSeven,
+		"slotsevenamount":play.ItemBank.SlotSevenAmount,"sloteight":play.ItemBank.SlotEight,
+		"sloteightamount":play.ItemBank.SlotEightAmount,"slotnine":play.ItemBank.SlotNine,
+		"slotnineamount":play.ItemBank.SlotNineAmount,"slotten":play.ItemBank.SlotTen,
+		"slottenamount":play.ItemBank.SlotTenAmount}}}
+	collection := client.Database("pfiles").Collection("Players")
+	_, err = collection.UpdateOne(context.Background(), filter, update, options.Update().SetUpsert(true))
+	if err != nil {
+		panic(err)
+	}
+}
+
+func savePeq(play Player) {
+	play = composeEq(play)
+	userFile, err := os.Open("weaselcreds")
+  if err != nil {
+    panic(err)
+  }
+  defer userFile.Close()
+  scanner := bufio.NewScanner(userFile)
+  scanner.Scan()
+  user := scanner.Text()
+  scanner.Scan()
+  pass := scanner.Text()
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
+	if err != nil {
+		panic(err)
+	}
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	err = client.Connect(ctx)
+	if err != nil {
+		panic(err)
+	}
+	filter := bson.M{"playerhash":bson.M{"$eq": play.PlayerHash}}
+	update := bson.M{"$set":bson.M{"eqbank":bson.M{"slotone":play.EqBank.SlotOne,
+		"slotoneamount":play.EqBank.SlotOneAmount,"slottwo":play.EqBank.SlotTwo,
+		"slottwoamount":play.EqBank.SlotTwoAmount,"slotthree":play.EqBank.SlotThree,
+		"slotthreeamount":play.EqBank.SlotThreeAmount,"slotfour":play.EqBank.SlotFour,"slotfouramount":play.EqBank.SlotFourAmount,
+		"slotfiveamount":play.EqBank.SlotFiveAmount,"slotsix":play.EqBank.SlotSix,
+		"slotsixamount":play.EqBank.SlotSixAmount,"slotseven":play.EqBank.SlotSeven,
+		"slotsevenamount":play.EqBank.SlotSevenAmount,"sloteight":play.EqBank.SlotEight,
+		"sloteightamount":play.EqBank.SlotEightAmount,"slotnine":play.EqBank.SlotNine,
+		"slotnineamount":play.EqBank.SlotNineAmount,"slotten":play.EqBank.SlotTen,
+		"slottenamount":play.EqBank.SlotTenAmount}}}
+	collection := client.Database("pfiles").Collection("Players")
+	_, err = collection.UpdateOne(context.Background(), filter, update, options.Update().SetUpsert(true))
+	if err != nil {
+		panic(err)
+	}
+}
 
 //TODO make this modular
 func createChat(message string, player string) {
@@ -456,35 +517,6 @@ func addPfile(play Player, pass string) {
 		panic(err)
 	}
 	collection := client.Database("pfiles").Collection("Players")
-	_, err = collection.InsertOne(context.Background(), bson.M{"playerhash": hash(play.Name+pass),"name":play.Name,"title":play.Title,"inventory":play.Inventory, "equipment":play.Equipped,
+	_, err = collection.InsertOne(context.Background(), bson.M{"playerhash": hash(play.Name+pass),"name":play.Name,"title":play.Title,"inventory":bson.A{play.Inventory}, "equipped":bson.A{play.Equipped},
 						"coreboard": play.CoreBoard,"slain": play.Slain,"hoarded": play.Hoarded, "str": play.Str, "int": play.Int, "dex": play.Dex, "wis": play.Wis, "con":play.Con, "cha":play.Cha, "classes": play.Classes })
-}
-func savePfile(play Player) {
-	userFile, err := os.Open("weaselcreds")
-  if err != nil {
-    panic(err)
-  }
-  defer userFile.Close()
-  scanner := bufio.NewScanner(userFile)
-  scanner.Scan()
-  user := scanner.Text()
-  scanner.Scan()
-  pass := scanner.Text()
-  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
-	if err != nil {
-		panic(err)
-	}
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	err = client.Connect(ctx)
-	if err != nil {
-		panic(err)
-	}
-	filter := bson.M{"playerhash":bson.M{"$eq":play.PlayerHash}}
-	collection := client.Database("pfiles").Collection("Players")
-	_, err = collection.UpdateOne(context.Background(), filter, bson.M{"$set":bson.M{"equipped":play.Equipped,
-		"inventory":play.Inventory,"bankaccount":play.BankAccount,"playerhash": play.PlayerHash,"name":play.Name,"title":play.Title,"equipment":play.Equipped,
-						"coreboard": play.CoreBoard,"slain": play.Slain,"hoarded": play.Hoarded, "str": play.Str, "int": play.Int, "dex": play.Dex, "wis": play.Wis, "con":play.Con, "cha":play.Cha, "classes": play.Classes }})
-	if err != nil {
-		panic(err)
-	}
 }

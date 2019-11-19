@@ -2,29 +2,10 @@ package main
 
 import (
 	"github.com/SolarLune/dngn"
+
 	"time"
 )
-type Class struct {
-	Level float64
-	Name string
-	Skills []Skill
-	Spells []Spell
-}
 
-type Spell struct {
-	TechUsage int
-	Name string
-	Usage rune
-	Dam int
-	Level int
-	Consumed bool
-}
-type Skill struct {
-	Name string
-	DamType string
-	Level int
-	Usage rune
-}
 
 type StatusPayload struct {
 	Game string
@@ -54,25 +35,25 @@ type SignIn struct {
 	Ref string
 	Payload SignInPayload
 }
-
+type InventoryItem struct {
+	Item Object
+	Number int
+}
 type SignInPayload struct {
 	Name string
 	Game string
 }
-type Bank struct {
-	Clientele Client
-	Owner string
-}
-//user and owner here will also be a playerhash
-//on a UIDMaker() result rather than the pass
-type Client struct {
-		User string
-		TotalAmount float64
-		Accounts []float64
-}
-type Account struct {
-	Owner string
-	Amount float64
+type Object struct {
+	Name string
+	LongName string
+	Vnum int
+	Zone string
+	OwnerHash string
+	Value int
+	Slot int
+	X int
+	Y int
+	Owned bool
 }
 
 type BroadcastPayload struct {
@@ -84,15 +65,18 @@ type BroadcastPayload struct {
 	Col int
 	Selected bool
 	BigMessage string
+	CoreBoard string
+	Fights Fight
+	PlainCoreBoard string
+	CPU string
 	ID int
 	Transaction OnlineTransaction
 	Store OnlineStore
 }
-
-//Employer and owner will be a playerHash
 type Butler struct {
 	Employer string
 	Funds Account
+	ToBuy Object
 }
 type OnlineStore struct {
 	Owner string
@@ -107,25 +91,25 @@ type OnlineTransaction struct {
 	To Account
 	Price float64
 }
+type Bank struct {
+	Clientele Client
+	Owner string
+}
+type Client struct {
+		User string
+		TotalAmount float64
+		Accounts []float64
+}
+type Account struct {
+	Owner string
+	Income OnlineStore
+	Amount float64
+}
 
 type Broadcast struct {
     Event string
     Ref string
     Payload BroadcastPayload
-}
-
-
-type SendBPayload struct {
-  Channel string
-  Name string
-  Message string
-	BigMessage string
-}
-
-type SendBroadcast struct {
-  Event string
-  Ref string
-  Payload SendBPayload
 }
 
 type Descriptions struct {
@@ -135,7 +119,7 @@ type Descriptions struct {
 	ROOMTITLE int
 }
 type Chat struct {
-	User string
+	User Player
 	Message string
 	Time time.Time
 }
@@ -166,30 +150,86 @@ type Exit struct {
 	Up int
 	Down int
 }
-
-
-type Object struct {
-	Name string
-	LongName string
-	Vnum int
-	Zone string
-	Owner Player
-	Slot int
-	Value int
-	X int
-	Y int
-	Owned bool
-}
-type InventoryItem struct {
+type EquipmentItem struct {
 	Item Object
 	Number int
 }
-type EquipmentItem struct {
-	Item Object
+type EquipmentBank struct {
+
+  SlotOne EquipmentItem
+  SlotOneAmount int
+
+  SlotTwo EquipmentItem
+  SlotTwoAmount int
+
+  SlotThree EquipmentItem
+  SlotThreeAmount int
+
+  SlotFour EquipmentItem
+  SlotFourAmount int
+
+  SlotFive EquipmentItem
+  SlotFiveAmount int
+
+  SlotSix EquipmentItem
+  SlotSixAmount int
+
+  SlotSeven EquipmentItem
+  SlotSevenAmount int
+
+  SlotEight EquipmentItem
+  SlotEightAmount int
+
+  SlotNine EquipmentItem
+  SlotNineAmount int
+
+  SlotTen EquipmentItem
+  SlotTenAmount int
+}
+type InventoryBank struct {
+
+  SlotOne InventoryItem
+  SlotOneAmount int
+
+  SlotTwo InventoryItem
+  SlotTwoAmount int
+
+  SlotThree InventoryItem
+  SlotThreeAmount int
+
+  SlotFour InventoryItem
+  SlotFourAmount int
+
+  SlotFive InventoryItem
+  SlotFiveAmount int
+
+  SlotSix InventoryItem
+  SlotSixAmount int
+
+  SlotSeven InventoryItem
+  SlotSevenAmount int
+
+  SlotEight InventoryItem
+  SlotEightAmount int
+
+  SlotNine InventoryItem
+  SlotNineAmount int
+
+  SlotTen InventoryItem
+  SlotTenAmount int
+}
+type Action struct {
+	Affects Player
+	From Mobile
+	Damage int
+	DamMsg string
 }
 type Player struct {
+	hostname string
 	Name string
 	Title string
+	ItemBank InventoryBank
+	EqBank EquipmentBank
 	Inventory []InventoryItem
 	Equipped []EquipmentItem
 	CoreBoard string
@@ -197,8 +237,13 @@ type Player struct {
 	CurrentRoom Space
 	PlayerHash string
 	Classes []Class
+	Level float64
 	Target string
 	TargetLong string
+	ESlotSpell Spell
+	ESlotSkill Skill
+	QSlotSpell Spell
+	QSlotSkill Skill
 	//ToBuy will have to either be an ItemHash
 	//Or a vnum
 	ToBuy int
@@ -211,8 +256,11 @@ type Player struct {
 	CoreShow bool
 	Channels []string
 	Battling bool
+	BattlingMob Mobile
 	Profile string
 	Session string
+	Attack int
+	Defend int
 
 	Slain int
 	Hoarded int
@@ -232,58 +280,58 @@ type Player struct {
 	Con int
 	Cha int
 }
-
 type Fight struct {
+	Won int
+	Found int
 	Oppose []Mobile
 	Former []Player
 	Treasure []Object
 }
-type Payload struct {
-  Client_id string
-  Client_secret string
-  Supports []string
-  Channels []string
-  Version string
-  User_agent string
-  Unicode string
-  Status string
 
-}
-type HeartPayload struct {
-  Players []string
+type Class struct {
+	Level float64
+	Name string
+	Skills []Skill
+	Spells []Spell
 }
 
-type Heartbeat struct {
-  Event string
-  Payload HeartPayload
+
+type Spell struct {
+	TechUsage int
+	Usage rune
+	Level int
+  DamType string
+	Consumed bool
+	Name string
+  Sound int
+  Dam int
 }
 
-type Authenticator struct {
-  Event string
-  Payload Payload
+type Skill struct {
+	Name string
+	DamType string
+	Level int
+	Usage rune
+	Dam int
+  Sound int
 }
 
 type Mobile struct {
 	Name string
+	Corpse string
 	LongName string
 	ItemSpawn []int
 	Rep string
 	MaxRezz int
+	AC int
 	Rezz int
 	Tech int
 	Aggro bool
 	Align int
+	Attack int
+	Defend int
 	Vnum int
 	X int
 	Y int
 	Char string
-}
-type GrapeMessPayload struct {
-  Channel string
-}
-
-type GrapeMess struct {
-  Event string
-  Payload GrapeMessPayload
-  Ref string
 }

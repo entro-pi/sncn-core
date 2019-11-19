@@ -14,8 +14,6 @@ import (
   "go.mongodb.org/mongo-driver/mongo"
   "go.mongodb.org/mongo-driver/mongo/options"
   zmq "github.com/pebbe/zmq4"
-//  "github.com/gorilla/websocket"
-  "golang.org/x/net/websocket"
   "encoding/json"
 )
 
@@ -31,242 +29,6 @@ const (
   grapevine = "wss://grapevine.haus/socket"
   callback = "https://snowcrashnetwork.grapevine.haus/auth"
 )
-
-// client dials the WebSocket echo server at the given url.
-// It then sends it 5 different messages and echo's the server's
-// response to each.
-func client(broadcast []Broadcast, clientid string, secret string, url string, player chan string, vineOn chan bool, broadcastLine chan Broadcast) error {
-    _, cancel := context.WithTimeout(context.Background(), time.Minute)
-    defer cancel()
-    vineOn <- true
-    //var playerList []string
-    fmt.Println("IN CLIENT FUNC")
-    var playing []string
-    ws, err := websocket.Dial(url, "", callback)
-    if err != nil {
-        return err
-    }
-    defer ws.Close()
-    var auth Authenticator
-    auth.Event = "authenticate"
-    auth.Payload.Client_id = strings.TrimSpace(clientid)
-    auth.Payload.Client_secret = strings.TrimSpace(secret)
-    auth.Payload.Supports = append(auth.Payload.Supports, "channels")
-    auth.Payload.Channels = append(auth.Payload.Channels, "grapevine")
-    auth.Payload.Version = "1.0.0"
-    auth.Payload.User_agent = "snowcrashnetwork"
-    authJSON, err := json.Marshal(auth)
-    if err != nil {
-      panic(err)
-    }
-    authJSONString := strings.ToLower(string(authJSON))
-    fmt.Println(authJSONString)
-    authorized := false
-    //authSend := []byte(auth)
-    for {
-      if !authorized {
-        //Authenticate
-        _, err = ws.Write([]byte(authJSONString))
-        if err != nil {
-            return err
-        }
-
-        var msg = make([]byte, 1024)
-        _, err = ws.Read(msg)
-        if err != nil {
-            return err
-        }
-        fmt.Println(string(msg))
-        authorized = true
-//        var authorizedMess Authenticator
-//        err = json.Unmarshal(msg, &authorizedMess)
-//        if err != nil {
-//          fmt.Println(err)
-//        }
-//        if authorizedMess.Payload.Status == "success" {
-//          authorized = true
-//        }
-
-      }else {
-        var heart Heartbeat
-        heart.Event = "heartbeat"
-        select {
-        case playersLog := <- player:
-          enqueue := true
-          logout := false
-          playerName := ""
-          if strings.Contains(playersLog, "LOGOUT||") {
-            playerName = strings.Split(playersLog, "||")[1]
-            logout = true
-            enqueue = false
-          }else if strings.Contains(playersLog, "+|+") {
-            fmt.Println("\033[38:2:255:0:0mTriggered subscribe\033[0m")
-              channelSub := strings.Split(playersLog, "+|+")[1]
-
-              //player should be assigned to this
-              _ = strings.Split(playersLog, "+|+")[0]
-              var ChannelSub GrapeMess
-              ChannelSub.Event = "channels/subscribe"
-              ChannelSub.Payload.Channel = channelSub
-              ChannelSub.Ref = UIDMaker()
-
-              ChannelSubJSON, err := json.Marshal(ChannelSub)
-              if err != nil {
-                panic(err)
-              }
-              ChannelSubJSONToSend := strings.ToLower(string(ChannelSubJSON))
-              fmt.Println("\033[38:2:200:0:0mNEW SUBSCRIPTION.\033[0m")
-              _, err = ws.Write([]byte(ChannelSubJSONToSend))
-              if err != nil {
-                  return err
-              }
-          continue
-          }else if strings.Contains(playersLog, "||UWU||") {
-            fmt.Println("\033[38:2:0:200:0mBroadcast Send\033[0m")
-              channel := strings.Split(playersLog, "||UWU||")[1]
-              playName := strings.Split(playersLog, "||UWU||")[0]
-              messageParts := strings.Split(playersLog, "||}}{{||")[1]
-              message := strings.Split(messageParts, "+++")[0]
-              messageLong := strings.Split(messageParts, "+++")[1]
-              //player should be assigned to this
-              _ = strings.Split(playersLog, "||UWU||")[0]
-              var Send SendBroadcast
-              var Save Broadcast
-              Save.Event = "channels/send"
-              Send.Event = "channels/send"
-              Save.Payload.Channel = channel
-              Send.Payload.Channel = channel
-              Send.Ref = UIDMaker()
-              Save.Ref = Send.Ref
-              Send.Payload.Name = playName
-              Save.Payload.Name = playName
-              Send.Payload.Message = message
-              Save.Payload.Message = message
-              Send.Payload.BigMessage = messageLong
-              Save.Payload.BigMessage = messageLong
-              SendJSON, err := json.Marshal(Send)
-              initGrape(Save)
-              if err != nil {
-                panic(err)
-              }
-              SendJSONTo := strings.ToLower(string(SendJSON))
-              fmt.Println("\033[38:2:0:200:0mNEW BROADSIDED BROADCAST.\033[0m")
-              _, err = ws.Write([]byte(SendJSONTo))
-              if err != nil {
-                  return err
-              }
-          continue
-          }else if strings.Contains(playersLog, "=+=") {
-            var broadcastNow Broadcast
-              broadcastLine <- broadcastNow
-              continue
-          }else if strings.Contains(playersLog, "-|-") {
-            fmt.Println("\033[38:2:255:0:0mTriggered unsubscribe\033[0m")
-              channelSub := strings.Split(playersLog, "-|-")[1]
-
-              //player should be assigned to this
-              _ = strings.Split(playersLog, "-|-")[0]
-              var ChannelSub GrapeMess
-              ChannelSub.Event = "channels/unsubscribe"
-              ChannelSub.Payload.Channel = channelSub
-              ChannelSub.Ref = UIDMaker()
-
-              ChannelSubJSON, err := json.Marshal(ChannelSub)
-              if err != nil {
-                panic(err)
-              }
-              ChannelSubJSONToSend := strings.ToLower(string(ChannelSubJSON))
-              fmt.Println("\033[38:2:200:0:0mNEW UNSUBSCRIPTION.\033[0m")
-              _, err = ws.Write([]byte(ChannelSubJSONToSend))
-              if err != nil {
-                  return err
-              }
-          continue
-          }
-          for i := 0;i < len(playing);i++ {
-            if playing[i] == playersLog {
-              enqueue = false
-            }
-          }
-          if enqueue {
-            if playersLog != "" {
-              playing = append(playing, playersLog)
-              heart.Payload.Players = append(heart.Payload.Players, playersLog)
-            }
-          }else if logout {
-            var loggedOut []string
-            for i := 0;i < len(playing);i++ {
-              if strings.ToLower(playing[i]) == strings.ToLower(playerName) {
-                if len(playing) > 1 {
-                  continue
-                }else if len(playing) == 1 {
-                  if len(loggedOut) < 1 {
-                    emptyWho := make([]string, 0)
-                    loggedOut = emptyWho
-                  }
-                  playing = loggedOut
-                }else {
-                  loggedOut = append(loggedOut, playing[i])
-                }
-
-              }
-              heart.Payload.Players = loggedOut
-              logout = false
-            }
-          }else {
-            heart.Payload.Players = playing
-          }
-        default:
-          if len(heart.Payload.Players) <= 0  && len(playing) >= 1 {
-            heart.Payload.Players = playing
-          }else if len(heart.Payload.Players) <= 0 {
-            emptyWho := make([]string, 0)
-            heart.Payload.Players = emptyWho
-          }
-        }
-        heartJSON, err := json.Marshal(heart)
-        if err != nil {
-          panic(err)
-        }
-        heartJSONString := strings.ToLower(string(heartJSON))
-        var heartbeat = make([]byte, 512)
-        _, err = ws.Read(heartbeat)
-        if err != nil {
-            return err
-        }
-        fmt.Println(heartJSONString)
-        fmt.Println(string(heartbeat))
-        if strings.Contains(string(heartbeat), "heartbeat") {
-          fmt.Println("\033[38:2:200:0:0mBeep.\033[0m")
-          _, err = ws.Write([]byte(heartJSONString))
-          if err != nil {
-              return err
-          }
-        }
-        if strings.Contains(string(heartbeat), "channels/broadcast") {
-          fmt.Println("\033[38:2:0:150:150m[[Message]]\033[0m")
-          var broadcastNow Broadcast
-          newBroad := strings.Trim(string(heartbeat), "\x00")
-
-          err = json.Unmarshal([]byte(newBroad), &broadcastNow)
-          if err != nil {
-            fmt.Println(err)
-          }
-          broadcast = append(broadcast, broadcastNow)
-          broadcastLine <- broadcastNow
-//          player <- fmt.Sprint("=+=")
-
-          fmt.Println(broadcastNow.Payload.Name+"@"+broadcastNow.Payload.Game+"\033[38:2:0:150:150m[["+broadcastNow.Payload.Message+"]]\033[0m")
-        }
-
-
-
-      }
-
-    }
-    vineOn <- false
-    return nil
-}
 
 func grapeVine(broadcast []Broadcast, playerList chan string, vineOn chan bool, broadcastLine chan Broadcast){
   clientFile, err := os.Open("client")
@@ -284,7 +46,7 @@ func grapeVine(broadcast []Broadcast, playerList chan string, vineOn chan bool, 
   }
   fmt.Println(strings.TrimSpace(string(clientid)))
   fmt.Println(strings.TrimSpace(string(secret)))
-  go client(broadcast, string(clientid), string(secret), grapevine, playerList, vineOn, broadcastLine)
+//  go client(broadcast, string(clientid), string(secret), grapevine, playerList, vineOn, broadcastLine)
 }
 
 func hash(value string) string {
@@ -503,6 +265,47 @@ func onlineButlerTransaction(advert Broadcast, customer Butler) Object {
   return blank
 }
 
+
+func getPlayers() []Player {
+  userFile, err := os.Open("weaselcreds")
+  if err != nil {
+    panic(err)
+  }
+  defer userFile.Close()
+  scanner := bufio.NewScanner(userFile)
+  scanner.Scan()
+  user := scanner.Text()
+  scanner.Scan()
+  pass := scanner.Text()
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
+  if err != nil {
+    panic(err)
+  }
+  ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+  err = client.Connect(ctx)
+  if err != nil {
+    panic(err)
+  }
+
+  collection := client.Database("pfiles").Collection("Players")
+  curs, err := collection.Find(context.Background(), bson.M{})
+  if err != nil {
+    panic(err)
+  }
+  var container []Player
+  for curs.Next(context.Background()) {
+    var play Player
+    err = curs.Decode(&play)
+    if err != nil {
+      panic(err)
+    }
+    container = append(container, play)
+  }
+
+  return container
+
+}
+
 func getGrapes() []Broadcast {
   userFile, err := os.Open("weaselcreds")
   if err != nil {
@@ -562,7 +365,7 @@ func initGrape(bcast Broadcast) Broadcast {
   if err != nil {
     panic(err)
   }
-  update := bson.M{"event":bcast.Event,"ref":bcast.Ref,"payload":bson.M{"channel":bcast.Payload.Channel, "message":bcast.Payload.Message,"game":bcast.Payload.Game,"name":bcast.Payload.Name}}
+  update := bson.M{"event":bcast.Event,"ref":bcast.Ref,"payload":bson.M{"channel":bcast.Payload.Channel,"id":bcast.Payload.ID, "message":bcast.Payload.Message,"game":bcast.Payload.Game,"name":bcast.Payload.Name,"transaction":bcast.Payload.Transaction}}
   collection := client.Database("broadcasts").Collection("snowcrash")
   _, err = collection.InsertOne(context.Background(), update)
   if err != nil {
@@ -761,23 +564,9 @@ func loopInput(populated []Space, broadcast []Broadcast, in chan string, players
           panic(err)
         }
     }else if strings.Contains(request, "+++") {
-      toSend := showChat()
-      fmt.Println("Sending chat list")
-      _, err = response.Send(toSend, 0)
-      if err != nil {
-        panic(err)
-      }
+
     }else if strings.Contains(request, "+=+") {
-      message := strings.Split(request, "+=+")[1]
-      playerName := strings.Split(request, "+=+")[0]
-      fmt.Println("Creating chat")
-      createChat(message, playerName)
-      toSend := showChat()
-      fmt.Println("Sending chat")
-      _, err = response.Send(toSend, 0)
-      if err != nil {
-        panic(err)
-      }
+
 
     }else if strings.Contains(request, "++SAVE++"){
       if len(strings.Split(request, "++SAVE++")) == 2 {
@@ -1012,61 +801,106 @@ func AssembleBroadside(broadside Broadcast, row int, col int) (string) {
 	//	fmt.Println(cel)
 }
 func main() {
-    allItems := readItemsFromFile("dat/items/items.itm")
-    broadcast := make([]Broadcast, 1)
-    broadcastLine := make(chan Broadcast)
-    vineOn := make(chan bool)
-    in := make(chan string)
-    var populated []Space
-    var wizinit bool
-    wizinit = false
-    playerList := make(chan string)
-    populated = PopulateAreas()
-    grapeVine(broadcast, playerList, vineOn, broadcastLine)
-    if len(os.Args) > 1 {
-      if len(os.Args) == 2 && os.Args[1] == "--wizinit" {
-        dorp := InitPlayer("dorp", "norp")
-        descString := "The absence of light is blinding.\nThree large telephone poles illuminate a small square."
-
-        InitZoneSpaces("5-15", "Midgaard", descString)
-        //populated = PopulateAreas()
-        addPfile(dorp, "norp")
-        dorp.CurrentRoom = populated[0]
-        savePfile(dorp)
-        fmt.Println("dorp/norp")
-        wizinit = true
-      }
+    //allItems := readItemsFromFile("dat/items/items.itm")
+    playerSignIn, err := zmq.NewSocket(zmq.REP)
+    if err != nil {
+      panic(err)
     }
-    if !wizinit {
-      go loopInput(populated, broadcast, in, playerList, vineOn, broadcastLine, allItems)
+    battling, err := zmq.NewSocket(zmq.PUB)
+    if err != nil {
+      panic(err)
     }
+    var players []Player
+    playerSignIn.Bind("tcp://127.0.0.1:7776")
+    battling.Bind("tcp://127.0.0.1:7777")
     for {
-      if !wizinit {
-        <- in
+      incomingPlayer, err := playerSignIn.Recv(0)
+      if err != nil {
+        panic(err)
       }
-        if len(os.Args) == 2 && os.Args[1] == "--wizinit" {
-        descString := "The absence of light is blinding.\nThree large telephone poles illuminate a small square."
-  			for len(strings.Split(descString, "\n")) < 8 {
-  				descString += "\n"
-  			}
-  			InitZoneSpaces("0-5", "The Void", descString)
-  			descString = "I wonder what day is recycling day.\nEven the gods create trash."
-  			for len(strings.Split(descString, "\n")) < 8 {
-  				descString += "\n"
-  			}
-  			InitZoneSpaces("5-15", "Midgaard", descString)
-  			populated = PopulateAreas()
+        if strings.Contains(incomingPlayer, "ACCEPT") {
+          playHash := strings.Split(incomingPlayer, ":")[1]
+          player := lookupPlayerByHash(playHash)
+          if player.Name != "" {
+            players = append(players, player)
+          }
+        }
+        if strings.Contains(incomingPlayer, "ATTACK") {
+          splitNameAttacked := strings.Split(incomingPlayer, ";")
+          playName, mobAttacked := splitNameAttacked[1], splitNameAttacked[2]
+          for i := 0;i < len(players);i++ {
+            if players[i].Name == playName {
+              players[i].Battling = true
+              play := players[i]
+              for c := 0;c < len(play.Fights.Oppose);c++ {
+                if play.Fights.Oppose[c].Rezz > 0 && play.Fights.Oppose[c].Name == mobAttacked {
+                  //FIGHT!
+                  act := PvEResolve(players[i])
+                  _, err := battling.Send(play.Name+":"+act.DamMsg+"="+strconv.Itoa(act.Damage), 0)
+                  if err != nil {
+                    panic(err)
+                  }
+                }else if play.Fights.Oppose[c].Rezz <= 0 {
+                  //already dead!
+                  players[i].Battling = false
+                }else {
+                  //not here!
+                  players[i].Battling = false
+                }
 
-  			createMobiles("Noodles")
-        respond := fmt.Sprint("\033[38:2:0:250:0mInitialized "+strconv.Itoa(len(populated))+" rooms\033[0m")
-        fmt.Printf(respond)
+              }
+            }
+          }
+        }
+      //This is just because we can't properly trigger it yet
 
-        fmt.Println("\033[38:2:0:250:0mAll tests passed and world has been initialzed\n\033[0mYou may now start by running ./sncn-core with no arguments and logging in from a client\nUser:dorp\nPass:norp.")
-        os.Exit(1)
-      }
+
     }
+
 }
 
+func PvEResolve(play Player) Action {
+  var act Action
+  mob := play.BattlingMob
+  act.Affects = play
+  act.From = mob
+  Attack := rand.Intn(act.From.Attack)
+  Defend := rand.Intn(act.Affects.Defend) - Attack
+  if Defend < 0 {
+    act.Damage = Defend * -1 + rand.Intn(act.From.Attack)
+    act.DamMsg = mob.Name+" swings widly and lands \033[38:2:200:0:0m"+ strconv.Itoa(act.Damage)+ "\033[0m points of damage!"
+  }else {
+    act.Damage = 0
+    act.DamMsg = mob.Name +" \033[38:2:0:200:0m fails to do any damage\033[0m!"
+  }
+  return act
+}
+
+func playerListener(incoming chan string, outgoing chan Player) {
+  for {
+    select {
+    case inValue := <-incoming:
+      players := getPlayers()
+      inSplit := strings.Split(inValue, ":")
+      if inSplit[0] == "ACCEPT" {
+          for i := 0;i < len(players);i++ {
+            if players[i].PlayerHash == inSplit[1] {
+              //Success
+              outgoing <- players[i]
+            }
+          }
+      }
+    }
+  }
+
+}
+func playerBattle(play Player) {
+  out, err := zmq.NewSocket(zmq.PUB)
+  if err != nil {
+    panic(err)
+  }
+  err = out.Bind("tcp://127.0.0.1:7777")
+}
 func UIDMaker() string {
 	hostname := "localhost"
 	username := "username"
