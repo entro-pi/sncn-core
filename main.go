@@ -74,7 +74,7 @@ func updatePlayerSlain(hash string) {
   user := scanner.Text()
   scanner.Scan()
   pass := scanner.Text()
-  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://"+user+":"+pass+"@localhost"))
   if err != nil {
     panic(err)
   }
@@ -125,7 +125,7 @@ func lookupPlayerByHash(playerHash string) Player {
   user := scanner.Text()
   scanner.Scan()
   pass := scanner.Text()
-  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://"+user+":"+pass+"@localhost"))
   if err != nil {
     panic(err)
   }
@@ -161,7 +161,7 @@ func lookupPlayer(name string, pass string) Player {
   user := scanner.Text()
   scanner.Scan()
   passCred := scanner.Text()
-  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+passCred+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://"+user+":"+passCred+"@localhost"))
   if err != nil {
     panic(err)
   }
@@ -277,7 +277,7 @@ func getPlayers() []Player {
   user := scanner.Text()
   scanner.Scan()
   pass := scanner.Text()
-  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://"+user+":"+pass+"@localhost"))
   if err != nil {
     panic(err)
   }
@@ -317,7 +317,7 @@ func getGrapes() []Broadcast {
   user := scanner.Text()
   scanner.Scan()
   pass := scanner.Text()
-  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://"+user+":"+pass+"@localhost"))
   if err != nil {
     panic(err)
   }
@@ -356,7 +356,7 @@ func initGrape(bcast Broadcast) Broadcast {
   user := scanner.Text()
   scanner.Scan()
   pass := scanner.Text()
-  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://"+user+":"+pass+"@localhost"))
   if err != nil {
     panic(err)
   }
@@ -801,6 +801,15 @@ func AssembleBroadside(broadside Broadcast, row int, col int) (string) {
 	//	fmt.Println(cel)
 }
 func main() {
+    if len(os.Args) > 1 {
+      if os.Args[1] == "--wizinit" {
+        InitPlayer("dorp", "norp")
+        InitZoneSpaces("0-29", "zem", "Nothing but cosmic rays.")
+        fmt.Println("Initiated dorpnorp")
+        os.Exit(1)
+
+      }
+    }
     //allItems := readItemsFromFile("dat/items/items.itm")
     playerSignIn, err := zmq.NewSocket(zmq.REP)
     if err != nil {
@@ -811,18 +820,32 @@ func main() {
       panic(err)
     }
     var players []Player
-    playerSignIn.Bind("tcp://127.0.0.1:7776")
-    battling.Bind("tcp://127.0.0.1:7777")
+    err = playerSignIn.Bind("tcp://*:7776")
+    if err != nil {
+      panic(err)
+    }
+    err = battling.Bind("tcp://*:7777")
+    if err != nil {
+      panic(err)
+    }
     for {
+      fmt.Println("Awaiting player input")
       incomingPlayer, err := playerSignIn.Recv(0)
       if err != nil {
         panic(err)
       }
+      fmt.Println("got player input")
+      fmt.Println(incomingPlayer)
         if strings.Contains(incomingPlayer, "ACCEPT") {
           playHash := strings.Split(incomingPlayer, ":")[1]
+          fmt.Println(playHash)
           player := lookupPlayerByHash(playHash)
           if player.Name != "" {
             players = append(players, player)
+          }
+          _, err = playerSignIn.Send("ACCEPTED"+player.Name, 0)
+          if err != nil {
+            panic(err)
           }
         }
         if strings.Contains(incomingPlayer, "ATTACK") {

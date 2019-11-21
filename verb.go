@@ -26,7 +26,7 @@ func getBroadcasts() []Broadcast {
   user := scanner.Text()
   scanner.Scan()
   pass := scanner.Text()
-  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://"+user+":"+pass+"@localhost"))
 	if err != nil {
 		panic(err)
 	}
@@ -332,7 +332,7 @@ func savePfile(play Player) {
   user := scanner.Text()
   scanner.Scan()
   pass := scanner.Text()
-  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://"+user+":"+pass+"@localhost"))
 	if err != nil {
 		panic(err)
 	}
@@ -355,8 +355,6 @@ func savePfile(play Player) {
 	if err != nil {
 		panic(err)
 	}
-	savePinv(play)
-	savePeq(play)
 }
 func savePinv(play Player) {
 	play = composeInv(play)
@@ -370,7 +368,7 @@ func savePinv(play Player) {
   user := scanner.Text()
   scanner.Scan()
   pass := scanner.Text()
-  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://"+user+":"+pass+"@localhost"))
 	if err != nil {
 		panic(err)
 	}
@@ -409,7 +407,7 @@ func savePeq(play Player) {
   user := scanner.Text()
   scanner.Scan()
   pass := scanner.Text()
-  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://"+user+":"+pass+"@localhost"))
 	if err != nil {
 		panic(err)
 	}
@@ -448,7 +446,7 @@ func createChat(message string, player string) {
   user := scanner.Text()
   scanner.Scan()
   pass := scanner.Text()
-  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://"+user+":"+pass+"@localhost"))
 	if err != nil {
 		panic(err)
 	}
@@ -482,7 +480,7 @@ func createMobiles(name string) {
   user := scanner.Text()
   scanner.Scan()
   pass := scanner.Text()
-  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://"+user+":"+pass+"@localhost"))
 	if err != nil {
 		panic(err)
 	}
@@ -507,7 +505,7 @@ func addPfile(play Player, pass string) {
   user := scanner.Text()
   scanner.Scan()
   passCred := scanner.Text()
-  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+passCred+"@cloud-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://"+user+":"+passCred+"@localhost"))
 	if err != nil {
 		panic(err)
 	}
