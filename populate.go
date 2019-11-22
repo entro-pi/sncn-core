@@ -24,7 +24,7 @@ func PopulateAreaMobiles() []Mobile {
   user := scanner.Text()
   scanner.Scan()
   pass := scanner.Text()
-  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://"+user+":"+pass+"@localhost"))
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@sncn-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
 	if err != nil {
 		panic(err)
 	}
@@ -83,7 +83,7 @@ func PopulateAreas() []Space {
   user := scanner.Text()
   scanner.Scan()
   pass := scanner.Text()
-  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://"+user+":"+pass+"@localhost"))
+  client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://"+user+":"+pass+"@sncn-hifs4.mongodb.net/test?retryWrites=true&w=majority"))
 	if err != nil {
 		panic(err)
 	}
